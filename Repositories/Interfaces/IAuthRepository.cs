@@ -8,7 +8,6 @@ namespace CoHabit.API.Repositories.Interfaces
 {
     public interface IAuthRepository
     {
-        Task CreateUserAccountAsync(string phone, string passwordHash);
         Task<User> GetUserByPhoneAsync(string phone);
     }
 }

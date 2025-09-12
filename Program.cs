@@ -69,18 +69,18 @@ namespace CoHabit.API
                     };
                 });
 
-            //CORS
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowFrontend",
-                    policy =>
-                    {
-                        policy.WithOrigins("http://localhost:3000") // React app origin
-                            .AllowAnyHeader()
-                            .AllowAnyMethod()
-                            .AllowCredentials(); // QUAN TRỌNG: Cho phép cookies
-                    });
-            });
+            // //CORS
+            // builder.Services.AddCors(options =>
+            // {
+            //     options.AddPolicy("AllowFrontend",
+            //         policy =>
+            //         {
+            //             policy.WithOrigins("http://localhost:5199")
+            //                 .AllowAnyHeader()
+            //                 .AllowAnyMethod()
+            //                 .AllowCredentials(); // QUAN TRỌNG: Cho phép cookies
+            //         });
+            // });
 
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             builder.Services.AddScoped<IAuthService, AuthService>();
@@ -101,7 +101,7 @@ namespace CoHabit.API
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseCors("AllowFrontend");
+            // app.UseCors("AllowFrontend");
 
             app.MapControllers();
 

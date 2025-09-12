@@ -14,8 +14,10 @@ namespace CoHabit.API.Services.Implements
     public class OtpService : IOtpService
     {
         private readonly IOtpRepository _otpRepository;
-        public OtpService(IOtpRepository otpRepository)
+        private readonly IAuthRepository _authRepository;
+        public OtpService(IOtpRepository otpRepository, IAuthRepository authRepository)
         {
+            _authRepository = authRepository;
             _otpRepository = otpRepository;
         }
         public async Task CleanupExpiredOtpsAsync()
@@ -26,6 +28,13 @@ namespace CoHabit.API.Services.Implements
         public async Task<string> GenerateAndSendOtpAsync(string phoneNumber)
         {
             await CleanupExpiredOtpsAsync();
+
+            //Check if phone number is registered
+            var user = await _authRepository.GetUserByPhoneAsync(phoneNumber);
+            if (user != null)
+            {
+                throw new Exception("Phone number is registered");
+            }
 
             //Generate OTP code
             var otpCode = new Random().Next(1000, 9999).ToString();

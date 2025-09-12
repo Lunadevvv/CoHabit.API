@@ -16,18 +16,6 @@ namespace CoHabit.API.Repositories.Implements
         {
             _context = context;
         }
-        public async Task CreateUserAccountAsync(string phone, string passwordHash)
-        {
-            var user = new User
-            {
-                Phone = phone,
-                PasswordHash = passwordHash,
-                CreatedAt = DateTime.UtcNow,
-                IsRevoked = false
-            };
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-        }
 
         public async Task<User> GetUserByPhoneAsync(string phone)
         {

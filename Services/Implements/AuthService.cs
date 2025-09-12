@@ -19,9 +19,19 @@ namespace CoHabit.API.Services.Implements
             _jwtService = jwtService;
         }
 
-        public Task RegisterUserAsync(RegisterRequest request)
+        public async Task RegisterUserAsync(RegisterRequest request)
         {
-            throw new NotImplementedException();
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                UserName = request.Phone,
+                Phone = request.Phone,
+                CreatedAt = DateTime.UtcNow,
+                IsRevoked = false
+            };
+            user.PasswordHash = _userManager.PasswordHasher.HashPassword(user, request.Password); //hash password trước khi lưu vào bảng AspNetUsers
+            await _userManager.CreateAsync(user);
+            await _userManager.AddToRoleAsync(user, "BasicMember");
         }
     }
 }

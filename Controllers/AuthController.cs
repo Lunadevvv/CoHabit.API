@@ -23,6 +23,20 @@ namespace CoHabit.API.Controllers
             _otpService = otpService;
         }
 
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        {
+            try
+            {
+                await _authService.RegisterUserAsync(request);
+                return Ok(ApiResponse<object>.SuccessResponse(new {}, "User registered successfully."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message));
+            }
+        }
+
         [HttpPost("send-otp")]
         public async Task<IActionResult> SendOtp([FromQuery] string phoneNumber)
         {
