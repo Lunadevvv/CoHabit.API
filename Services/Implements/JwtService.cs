@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using CoHabit.API.DTOs.Requests;
+using CoHabit.API.DTOs.Responses;
 using CoHabit.API.Enitites;
+using CoHabit.API.Repositories.Interfaces;
 using CoHabit.API.Services.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 
@@ -15,8 +19,10 @@ namespace CoHabit.API.Services.Implements
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         public readonly IConfiguration _configuration;
-        public JwtService(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
+        private readonly IAuthRepository _authRepository;
+        public JwtService(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IAuthRepository authRepository)
         {
+            _authRepository = authRepository;
             _httpContextAccessor = httpContextAccessor;
             _configuration = configuration;
         }
@@ -63,8 +69,18 @@ namespace CoHabit.API.Services.Implements
                     Expires = expiration,
                     IsEssential = true,
                     Secure = true,
-                    SameSite = SameSiteMode.None
+                    SameSite = SameSiteMode.Strict
                 });
+        }
+
+        public (string refreshToken, DateTime expiresAtUtc) GenerateRefreshToken()
+        {
+            var randomNumber = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            var refreshToken = Convert.ToBase64String(randomNumber);
+            var expiresAtUtc = DateTime.UtcNow.AddDays(_configuration.GetValue<double>("JwtOptions:RefreshTokenExpirationInDays"));
+            return (refreshToken, expiresAtUtc);
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using CoHabit.API.DTOs.Requests;
+using CoHabit.API.DTOs.Responses;
 using CoHabit.API.Helpers;
 using CoHabit.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -29,7 +30,43 @@ namespace CoHabit.API.Controllers
             try
             {
                 await _authService.RegisterUserAsync(request);
-                return Ok(ApiResponse<object>.SuccessResponse(new {}, "User registered successfully."));
+                return Ok(ApiResponse<object>.SuccessResponse(new { }, "User registered successfully."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message));
+            }
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
+        {
+            try
+            {
+                var response = await _authService.LoginUserAync(loginRequest);
+                return Ok(ApiResponse<LoginResponse>.SuccessResponse(response, "Login successful."));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ApiResponse<object>.ErrorResponse(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message));
+            }
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+        {
+            try
+            {
+                var response = await _authService.RefreshJwtTokenAsync(request);
+                return Ok(ApiResponse<LoginResponse>.SuccessResponse(response, "Token refreshed successfully."));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ApiResponse<object>.ErrorResponse(ex.Message));
             }
             catch (Exception ex)
             {
@@ -56,7 +93,9 @@ namespace CoHabit.API.Controllers
                 return BadRequest(ApiResponse<object>.ErrorResponse("Invalid or expired OTP."));
             }
 
-            return Ok(ApiResponse<object>.SuccessResponse(new{}, "OTP verified successfully."));
+            return Ok(ApiResponse<object>.SuccessResponse(new { }, "OTP verified successfully."));
         }
+        
+        
     }
 }

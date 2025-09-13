@@ -8,6 +8,7 @@ namespace CoHabit.API.Repositories.Interfaces
 {
     public interface IAuthRepository
     {
-        Task<User> GetUserByPhoneAsync(string phone);
+        Task<User?> GetUserByPhoneAsync(string phone);
+        Task<User?> ValidateRefreshTokenAsync(Guid userId, string refreshToken);
     }
 }

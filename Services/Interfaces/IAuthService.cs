@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CoHabit.API.DTOs.Requests;
+using CoHabit.API.DTOs.Responses;
 
 namespace CoHabit.API.Services.Interfaces
 {
     public interface IAuthService
     {
         Task RegisterUserAsync(RegisterRequest request);
+        Task<LoginResponse> LoginUserAync(LoginRequest loginRequest);
+        Task<LoginResponse> RefreshJwtTokenAsync(RefreshTokenRequest request);
     }
 }

@@ -17,10 +17,17 @@ namespace CoHabit.API.Repositories.Implements
             _context = context;
         }
 
-        public async Task<User> GetUserByPhoneAsync(string phone)
+        public async Task<User?> GetUserByPhoneAsync(string phone)
         {
             return await _context.Users
                 .Where(u => u.Phone == phone && !u.IsRevoked)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<User?> ValidateRefreshTokenAsync(Guid userId, string refreshToken)
+        {
+            return await _context.Users
+                .Where(u => u.Id == userId && u.RefreshToken == refreshToken && u.RefreshTokenExpiryTime > DateTime.UtcNow)
                 .FirstOrDefaultAsync();
         }
     }
