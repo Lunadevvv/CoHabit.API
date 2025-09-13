@@ -40,6 +40,11 @@ namespace CoHabit.API.Repositories.Implements
                 .Where(o => o.Phone == phoneNumber && !o.IsUsed && o.ExpiredAt > DateTime.UtcNow)
                 .OrderByDescending(o => o.CreatedAt)
                 .FirstOrDefaultAsync();
+
+            if(otp == null)
+            {
+                throw new KeyNotFoundException("Mã OTP này đã hết hạn.");
+            }
             return otp;
         }
 
