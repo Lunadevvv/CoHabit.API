@@ -57,8 +57,10 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
         builder.Entity<Characteristic>(entity =>
         {
             entity.HasKey(e => e.CharId);
+            entity.Property(e => e.CharId).HasMaxLength(5);
             entity.Property(e => e.Title).HasMaxLength(50);
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+            entity.HasIndex(e => e.CharId, "UQ__Characte__1788CC4D1E3E2C2E").IsUnique();
         });
 
         builder.Entity<Otp>(entity =>

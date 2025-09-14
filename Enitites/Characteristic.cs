@@ -2,7 +2,7 @@ namespace CoHabit.API.Enitites
 {
     public class Characteristic
     {
-        public Guid CharId { get; set; }
+        public string CharId { get; set; } = string.Empty;
         public required string Title { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

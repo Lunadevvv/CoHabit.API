@@ -23,7 +23,37 @@ namespace CoHabit.API
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new() { Title = "CoHabit API", Version = "v1" });
+
+                // Add JWT bearer authentication to Swagger
+                c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                    Description = "Enter JWT Bearer token **_only_**"
+                });
+
+                c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+                {
+                    {
+                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                        {
+                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                            {
+                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
+            });
+            
             builder.Services.AddDbContext<CoHabitDbContext>(opt =>
             {
                 opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
@@ -67,25 +97,37 @@ namespace CoHabit.API
                             Encoding.UTF8.GetBytes(builder.Configuration["JwtOptions:Secret"]!)),
                         ValidateIssuerSigningKey = true
                     };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            // Lấy token từ cookie thay vì header
+                            context.Token = context.Request.Cookies["access_token"];
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
 
-            // //CORS
-            // builder.Services.AddCors(options =>
-            // {
-            //     options.AddPolicy("AllowFrontend",
-            //         policy =>
-            //         {
-            //             policy.WithOrigins("http://localhost:5199")
-            //                 .AllowAnyHeader()
-            //                 .AllowAnyMethod()
-            //                 .AllowCredentials(); // QUAN TRỌNG: Cho phép cookies
-            //         });
-            // });
+            //CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend",
+                    policy =>
+                    {
+                        policy.WithOrigins("http://localhost:5199")
+                            .AllowAnyHeader()
+                            .AllowAnyMethod()
+                            .AllowCredentials(); // QUAN TRỌNG: Cho phép cookies
+                    });
+            });
 
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IOtpRepository, OtpRepository>();
             builder.Services.AddScoped<IOtpService, OtpService>();
+            builder.Services.AddScoped<ICharacteristicRepository, CharacteristicRepository>();
+            builder.Services.AddScoped<ICharacteristicService, CharacteristicService>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IJwtService, JwtService>();
 
             var app = builder.Build();
@@ -96,12 +138,13 @@ namespace CoHabit.API
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
             app.UseHttpsRedirection();
+
+            app.UseCors("AllowFrontend");
+
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // app.UseCors("AllowFrontend");
 
             app.MapControllers();
 

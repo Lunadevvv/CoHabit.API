@@ -24,9 +24,9 @@ namespace CoHabit.API.Migrations
 
             modelBuilder.Entity("CoHabit.API.Enitites.Characteristic", b =>
                 {
-                    b.Property<Guid>("CharId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("CharId")
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
@@ -40,6 +40,9 @@ namespace CoHabit.API.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("CharId");
+
+                    b.HasIndex(new[] { "CharId" }, "UQ__Characte__1788CC4D1E3E2C2E")
+                        .IsUnique();
 
                     b.ToTable("Characteristics");
                 });
@@ -222,31 +225,31 @@ namespace CoHabit.API.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("73696a88-5d95-411d-8b90-92161bee8678"),
+                            Id = new Guid("43ddb33f-a6f6-4153-b7ea-9755467b44ef"),
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = new Guid("ad4a1f4a-f4b8-42d9-95ee-ebec35b20ffb"),
+                            Id = new Guid("02de5e89-a336-4c7a-93d1-4de56e24c233"),
                             Name = "Moderator",
                             NormalizedName = "MODERATOR"
                         },
                         new
                         {
-                            Id = new Guid("14c21873-a5cd-4dd4-9662-c4230173ac4c"),
+                            Id = new Guid("f5f774b4-bdd2-4c79-8d9d-3159ed023a0c"),
                             Name = "ProMember",
                             NormalizedName = "PROMEMBER"
                         },
                         new
                         {
-                            Id = new Guid("c8ff74e4-87c1-47ce-b8eb-e827b9387275"),
+                            Id = new Guid("0c956220-0e7e-40cd-ab22-0f68fa77e6f7"),
                             Name = "PlusMember",
                             NormalizedName = "PLUSMEMBER"
                         },
                         new
                         {
-                            Id = new Guid("5a60b578-fcf6-4816-8bda-506c2d02e93f"),
+                            Id = new Guid("c832d41e-f65c-46a5-900f-165791a14296"),
                             Name = "BasicMember",
                             NormalizedName = "BASICMEMBER"
                         });
@@ -360,8 +363,8 @@ namespace CoHabit.API.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CharId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("CharId")
+                        .HasColumnType("nvarchar(5)");
 
                     b.HasKey("UserId", "CharId");
 

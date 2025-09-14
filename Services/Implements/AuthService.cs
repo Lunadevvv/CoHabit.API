@@ -38,6 +38,7 @@ namespace CoHabit.API.Services.Implements
 
             //Save accesstoken to cookie
             _jwtService.WriteAuthTokenAsHttpOnlyCookie("AccessToken", jwtToken, jwtExpiresAtUtc);
+            _jwtService.WriteAuthTokenAsHttpOnlyCookie("RefreshToken", refreshToken, refreshTokenExpiresAtUtc);
 
             //Update refresh token in database
             user.RefreshToken = refreshToken;

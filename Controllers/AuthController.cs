@@ -7,13 +7,14 @@ using CoHabit.API.DTOs.Requests;
 using CoHabit.API.DTOs.Responses;
 using CoHabit.API.Helpers;
 using CoHabit.API.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace CoHabit.API.Controllers
 {
     [ApiController]
-    [Route("/api/[controller]")]
+    [Route("/api/v1/[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly IOtpService _otpService;
@@ -54,6 +55,16 @@ namespace CoHabit.API.Controllers
             {
                 return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message));
             }
+        }
+
+        [HttpPost("logout")]
+        [Authorize]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("AccessToken"); // Xóa cookie đăng nhập
+            Response.Cookies.Delete("RefreshToken"); // Xóa cookie đăng nhập
+
+            return Ok("Log out successful");
         }
 
         [HttpPost("refresh-token")]

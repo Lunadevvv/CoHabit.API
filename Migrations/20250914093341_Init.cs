@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace CoHabit.API.Migrations
 {
     /// <inheritdoc />
-    public partial class InitUserAndCharacteristicsAndOtp : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -66,7 +66,7 @@ namespace CoHabit.API.Migrations
                 name: "Characteristics",
                 columns: table => new
                 {
-                    CharId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CharId = table.Column<string>(type: "nvarchar(5)", maxLength: 5, nullable: false),
                     Title = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false)
@@ -204,7 +204,7 @@ namespace CoHabit.API.Migrations
                 columns: table => new
                 {
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CharId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    CharId = table.Column<string>(type: "nvarchar(5)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -228,11 +228,11 @@ namespace CoHabit.API.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { new Guid("14c21873-a5cd-4dd4-9662-c4230173ac4c"), null, "ProMember", "PROMEMBER" },
-                    { new Guid("5a60b578-fcf6-4816-8bda-506c2d02e93f"), null, "BasicMember", "BASICMEMBER" },
-                    { new Guid("73696a88-5d95-411d-8b90-92161bee8678"), null, "Admin", "ADMIN" },
-                    { new Guid("ad4a1f4a-f4b8-42d9-95ee-ebec35b20ffb"), null, "Moderator", "MODERATOR" },
-                    { new Guid("c8ff74e4-87c1-47ce-b8eb-e827b9387275"), null, "PlusMember", "PLUSMEMBER" }
+                    { new Guid("02de5e89-a336-4c7a-93d1-4de56e24c233"), null, "Moderator", "MODERATOR" },
+                    { new Guid("0c956220-0e7e-40cd-ab22-0f68fa77e6f7"), null, "PlusMember", "PLUSMEMBER" },
+                    { new Guid("43ddb33f-a6f6-4153-b7ea-9755467b44ef"), null, "Admin", "ADMIN" },
+                    { new Guid("c832d41e-f65c-46a5-900f-165791a14296"), null, "BasicMember", "BASICMEMBER" },
+                    { new Guid("f5f774b4-bdd2-4c79-8d9d-3159ed023a0c"), null, "ProMember", "PROMEMBER" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -285,6 +285,12 @@ namespace CoHabit.API.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "UQ__Characte__1788CC4D1E3E2C2E",
+                table: "Characteristics",
+                column: "CharId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "UQ__Otp__C8EE201F536C85E4",
