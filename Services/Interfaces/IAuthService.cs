@@ -12,5 +12,7 @@ namespace CoHabit.API.Services.Interfaces
         Task RegisterUserAsync(RegisterRequest request);
         Task<LoginResponse> LoginUserAync(LoginRequest loginRequest);
         Task<LoginResponse> RefreshJwtTokenAsync(RefreshTokenRequest request);
+        Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request);
+        Task ForgotPasswordAsync(ForgotPasswordRequest request);
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using CoHabit.API.DTOs.Requests;
 using CoHabit.API.DTOs.Responses;
@@ -106,7 +107,46 @@ namespace CoHabit.API.Controllers
 
             return Ok(ApiResponse<object>.SuccessResponse(new { }, "OTP verified successfully."));
         }
-        
-        
+
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            try
+            {
+                var userId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
+                    ? parsedUserId
+                    : throw new Exception("Invalid user ID");
+
+                await _authService.ChangePasswordAsync(userId, request);
+                return Ok(ApiResponse<object>.SuccessResponse(new { }, "Password changed successfully."));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ApiResponse<object>.ErrorResponse(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message));
+            }
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            try
+            {
+                await _authService.ForgotPasswordAsync(request);
+                return Ok(ApiResponse<object>.SuccessResponse(new { }, "Reset password successfully."));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ApiResponse<object>.ErrorResponse(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message));
+            }
+        }
     }
 }

@@ -23,6 +23,46 @@ namespace CoHabit.API.Services.Implements
             _jwtService = jwtService;
         }
 
+        public async Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request)
+        {
+            var user = await _authRepository.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+            var isOldPasswordValid = await _userManager.CheckPasswordAsync(user, request.oldPassword);
+            if (!isOldPasswordValid)
+            {
+                throw new UnauthorizedAccessException("Old password is incorrect.");
+            }
+            var result = await _userManager.ChangePasswordAsync(user, request.oldPassword, request.newPassword);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new Exception($"Failed to change password: {errors}");
+            }
+        }
+
+        public async Task ForgotPasswordAsync(ForgotPasswordRequest request)
+        {
+            var user = await _authRepository.GetUserByPhoneAsync(request.phone);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+            var isOldPasswordValid = await _userManager.CheckPasswordAsync(user, request.oldPassword);
+            if (!isOldPasswordValid)
+            {
+                throw new UnauthorizedAccessException("Old password is incorrect.");
+            }
+            var result = await _userManager.ChangePasswordAsync(user, request.oldPassword, request.newPassword);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new Exception($"Failed to change password: {errors}");
+            }
+        }
+
         public async Task<LoginResponse> LoginUserAync(LoginRequest loginRequest)
         {
             var user = await _authRepository.GetUserByPhoneAsync(loginRequest.Phone);

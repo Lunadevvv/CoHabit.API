@@ -60,7 +60,7 @@ namespace CoHabit.API.Controllers
             }
         }
 
-        // GET: api/v1/Profile/characteristics/{userId}
+        // GET: api/v1/Profile/characteristics
         [HttpGet("characteristics")]
         public async Task<ActionResult<IEnumerable<Characteristic>>> GetUserCharacteristics()
         {
