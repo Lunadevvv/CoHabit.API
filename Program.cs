@@ -127,7 +127,7 @@ namespace CoHabit.API
             builder.Services.AddScoped<IOtpService, OtpService>();
             builder.Services.AddScoped<ICharacteristicRepository, CharacteristicRepository>();
             builder.Services.AddScoped<ICharacteristicService, CharacteristicService>();
-            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IProfileService, ProfileService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
 
             var app = builder.Build();

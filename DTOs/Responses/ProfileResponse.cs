@@ -6,14 +6,13 @@ using CoHabit.API.Enitites;
 
 namespace CoHabit.API.DTOs.Responses
 {
-    public record UserResponse(
+    public record ProfileResponse(
         Guid Id,
         string FullName,
         string Phone,
         string Yob,
         string Sex,
-        string Image,
-        List<CharacteristicResponse> Characteristics
+        string Image
     );
     
 }
