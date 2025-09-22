@@ -97,29 +97,29 @@ namespace CoHabit.API
                             Encoding.UTF8.GetBytes(builder.Configuration["JwtOptions:Secret"]!)),
                         ValidateIssuerSigningKey = true
                     };
-                    options.Events = new JwtBearerEvents
-                    {
-                        OnMessageReceived = context =>
-                        {
-                            // Lấy token từ cookie thay vì header
-                            context.Token = context.Request.Cookies["access_token"];
-                            return Task.CompletedTask;
-                        }
-                    };
+                    // options.Events = new JwtBearerEvents
+                    // {
+                    //     OnMessageReceived = context =>
+                    //     {
+                    //         // Lấy token từ cookie thay vì header
+                    //         context.Token = context.Request.Cookies["access_token"];
+                    //         return Task.CompletedTask;
+                    //     }
+                    // };
                 });
 
             //CORS
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowFrontend",
-                    policy =>
-                    {
-                        policy.WithOrigins("http://localhost:5199")
-                            .AllowAnyHeader()
-                            .AllowAnyMethod()
-                            .AllowCredentials(); // QUAN TRỌNG: Cho phép cookies
-                    });
-            });
+            // builder.Services.AddCors(options =>
+            // {
+            //     options.AddPolicy("AllowFrontend",
+            //         policy =>
+            //         {
+            //             policy.WithOrigins("http://localhost:5199")
+            //                 .AllowAnyHeader()
+            //                 .AllowAnyMethod()
+            //                 .AllowCredentials(); // QUAN TRỌNG: Cho phép cookies
+            //         });
+            // });
 
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             builder.Services.AddScoped<IAuthService, AuthService>();
@@ -129,6 +129,9 @@ namespace CoHabit.API
             builder.Services.AddScoped<ICharacteristicService, CharacteristicService>();
             builder.Services.AddScoped<IProfileService, ProfileService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
+            builder.Services.AddScoped<IVnPayService, VnPayService>();
+            builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+            builder.Services.AddScoped<IPaymentService, PaymentService>();
 
             var app = builder.Build();
 
@@ -140,7 +143,7 @@ namespace CoHabit.API
             }
             app.UseHttpsRedirection();
 
-            app.UseCors("AllowFrontend");
+            // app.UseCors("AllowFrontend");
 
             app.UseAuthentication();
             app.UseAuthorization();

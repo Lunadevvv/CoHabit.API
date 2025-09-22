@@ -20,8 +20,10 @@ namespace CoHabit.API.Controllers
     {
         private readonly IOtpService _otpService;
         private readonly IAuthService _authService;
-        public AuthController(IOtpService otpService, IAuthService authService)
+        private readonly ILogger<AuthController> _logger;
+        public AuthController(IOtpService otpService, IAuthService authService, ILogger<AuthController> logger)
         {
+            _logger = logger;
             _authService = authService;
             _otpService = otpService;
         }
@@ -31,7 +33,8 @@ namespace CoHabit.API.Controllers
         {
             try
             {
-                await _authService.RegisterUserAsync(request);
+                _logger.LogInformation("Registering user with phone: {phone}", request.Phone);
+                await _authService.RegisterUserAsync(request);                
                 return Ok(ApiResponse<object>.SuccessResponse(new { }, "User registered successfully."));
             }
             catch (Exception ex)
@@ -45,6 +48,7 @@ namespace CoHabit.API.Controllers
         {
             try
             {
+                _logger.LogInformation("User login attempt with phone: {phone}", loginRequest.Phone);
                 var response = await _authService.LoginUserAync(loginRequest);
                 return Ok(ApiResponse<LoginResponse>.SuccessResponse(response, "Login successful."));
             }
@@ -73,6 +77,7 @@ namespace CoHabit.API.Controllers
         {
             try
             {
+                _logger.LogInformation("Refreshing token for user ID: {userId}", request.UserId);
                 var response = await _authService.RefreshJwtTokenAsync(request);
                 return Ok(ApiResponse<LoginResponse>.SuccessResponse(response, "Token refreshed successfully."));
             }
@@ -89,6 +94,7 @@ namespace CoHabit.API.Controllers
         [HttpPost("send-otp")]
         public async Task<IActionResult> SendOtp([FromQuery] string phoneNumber)
         {
+            _logger.LogInformation("Sending OTP to phone number: {phoneNumber}", phoneNumber);
             var otp = await _otpService.GenerateAndSendOtpAsync(phoneNumber);
             return Ok(ApiResponse<object>.SuccessResponse(
                 new { Otp = otp },
@@ -99,6 +105,7 @@ namespace CoHabit.API.Controllers
         [HttpPost("verify-otp")]
         public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request)
         {
+            _logger.LogInformation("Verifying OTP for phone number: {phoneNumber}", request.Phone);
             var isValid = await _otpService.VerifyOtpAsync(request.Phone, request.Code);
             if (!isValid)
             {
@@ -117,7 +124,7 @@ namespace CoHabit.API.Controllers
                 var userId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
                     ? parsedUserId
                     : throw new Exception("Invalid user ID");
-
+                _logger.LogInformation("Changing password for user ID: {userId}", userId);
                 await _authService.ChangePasswordAsync(userId, request);
                 return Ok(ApiResponse<object>.SuccessResponse(new { }, "Password changed successfully."));
             }
@@ -136,6 +143,7 @@ namespace CoHabit.API.Controllers
         {
             try
             {
+                _logger.LogInformation("Processing forgot password for phone: {phone}", request.phone);
                 await _authService.ForgotPasswordAsync(request);
                 return Ok(ApiResponse<object>.SuccessResponse(new { }, "Reset password successfully."));
             }

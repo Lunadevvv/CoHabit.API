@@ -13,6 +13,7 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
     public DbSet<User> Users { get; set; }
     public DbSet<Characteristic> Characteristics { get; set; }
     public DbSet<Otp> Otps { get; set; }
+    public DbSet<Payment> Payments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
 
@@ -69,7 +70,7 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
             entity.Property(e => e.Phone).HasMaxLength(10);
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.ExpiredAt).HasColumnType("datetime");
-            entity.HasIndex(e => new { e.Phone, e.CodeHashed }, "UQ__Otp__C8EE201F536C85E4").IsUnique();
+            entity.HasIndex(e => e.Phone, "UQ__Otp__C8EE201F536C85E4").IsUnique();
         });
 
         //Seed data mặc định vào bảng asp.net role
@@ -109,7 +110,22 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
                     Name = "BasicMember",
                     NormalizedName = "BASICMEMBER"
                 }
-
             });
+
+        builder.Entity<Payment>(entity =>
+        {
+            entity.HasKey(e => e.PaymentId);
+            entity.Property(e => e.PaymentId).HasMaxLength(6);
+            entity.Property(e => e.Price).IsRequired();
+            entity.Property(e => e.Status).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime").IsRequired();
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime").IsRequired();
+            entity.Property(e => e.UserId).HasMaxLength(40).IsRequired();
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.Payments)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }
