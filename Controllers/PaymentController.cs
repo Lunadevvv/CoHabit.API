@@ -166,13 +166,8 @@ namespace CoHabit.API.Controllers
                 try
                 {
                     var paymentResult = _vnPayService.GetPaymentResult(Request.Query);
-                    var userId = await _paymentService.GetUserByPaymentId(paymentResult.PaymentId);
-                    if (string.IsNullOrEmpty(userId))
-                    {
-                        return NotFound("User not found for the given payment ID.");
-                    }
-                    var user = await _userManager.FindByIdAsync(userId);
-                    var payment = new Payment();
+                    var payment = await _paymentService.GetPayment(paymentResult.PaymentId);
+                    if (payment == null) return NotFound("Payment not found");
                     if (paymentResult.Success)
                     {
                         payment.PaymentId = paymentResult.PaymentId;
