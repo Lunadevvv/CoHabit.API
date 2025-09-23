@@ -137,5 +137,18 @@ namespace CoHabit.API.Services.Implements
             await _userManager.CreateAsync(user);
             await _userManager.AddToRoleAsync(user, "BasicMember");
         }
+
+        public async Task RevokeTokenAsync(Guid userId)
+        {
+            var user = await _authRepository.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = null;
+            user.IsRevoked = true;
+            await _userManager.UpdateAsync(user);
+        }
     }
 }

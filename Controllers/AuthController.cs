@@ -34,7 +34,7 @@ namespace CoHabit.API.Controllers
             try
             {
                 _logger.LogInformation("Registering user with phone: {phone}", request.Phone);
-                await _authService.RegisterUserAsync(request);                
+                await _authService.RegisterUserAsync(request);
                 return Ok(ApiResponse<object>.SuccessResponse(new { }, "User registered successfully."));
             }
             catch (Exception ex)
@@ -146,6 +146,26 @@ namespace CoHabit.API.Controllers
                 _logger.LogInformation("Processing forgot password for phone: {phone}", request.phone);
                 await _authService.ForgotPasswordAsync(request);
                 return Ok(ApiResponse<object>.SuccessResponse(new { }, "Reset password successfully."));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ApiResponse<object>.ErrorResponse(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message));
+            }
+        }
+
+        [HttpPatch("revoke")]
+        // [Authorize]
+        public async Task<IActionResult> RevokeToken([FromQuery] Guid userId)
+        {
+            try
+            {
+                _logger.LogInformation("Revoking token for user ID: {userId}", userId);
+                await _authService.RevokeTokenAsync(userId);
+                return Ok(ApiResponse<object>.SuccessResponse(new { }, $"Revoked user {userId} successfully."));
             }
             catch (UnauthorizedAccessException ex)
             {
