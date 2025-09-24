@@ -16,5 +16,6 @@ namespace CoHabit.API.Enitites
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public virtual ICollection<Characteristic>? Characteristics { get; set; }
         public virtual ICollection<Payment>? Payments { get; set; }
+        public virtual ICollection<Post>? Posts { get; set; }
     }
 }

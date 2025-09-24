@@ -132,6 +132,8 @@ namespace CoHabit.API
             builder.Services.AddScoped<IVnPayService, VnPayService>();
             builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
             builder.Services.AddScoped<IPaymentService, PaymentService>();
+            builder.Services.AddScoped<IFurnitureRepository, FurnitureRepository>();
+            builder.Services.AddScoped<IFurnitureService, FurnitureService>();
 
             var app = builder.Build();
 
