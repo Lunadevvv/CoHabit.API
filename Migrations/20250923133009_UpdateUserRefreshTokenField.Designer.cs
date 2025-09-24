@@ -4,6 +4,7 @@ using CoHabit.API;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoHabit.API.Migrations
 {
     [DbContext(typeof(CoHabitDbContext))]
-    partial class CoHabitDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250923133009_UpdateUserRefreshTokenField")]
+    partial class UpdateUserRefreshTokenField
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -172,9 +175,13 @@ namespace CoHabit.API.Migrations
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PhoneNumber")
+                    b.Property<string>("Phone")
+                        .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
@@ -215,9 +222,8 @@ namespace CoHabit.API.Migrations
                     b.HasIndex(new[] { "Id" }, "UQ__User__1788CC4DF7FFBA69")
                         .IsUnique();
 
-                    b.HasIndex(new[] { "PhoneNumber" }, "UQ__User__536C85E43394AC26")
-                        .IsUnique()
-                        .HasFilter("[PhoneNumber] IS NOT NULL");
+                    b.HasIndex(new[] { "Phone" }, "UQ__User__536C85E43394AC26")
+                        .IsUnique();
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -252,31 +258,31 @@ namespace CoHabit.API.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("e2d8aafd-fa14-43f1-aa4b-d5ce49d8d537"),
+                            Id = new Guid("6435bbbf-e3c6-403b-a874-57f4e483fb5b"),
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = new Guid("aa1e9520-2e2e-4814-a928-1a8e9f9478ab"),
+                            Id = new Guid("93c8d7b2-e056-4ee6-81e3-8f0b9a8141f6"),
                             Name = "Moderator",
                             NormalizedName = "MODERATOR"
                         },
                         new
                         {
-                            Id = new Guid("89702e40-6c9f-4c5a-826a-03d6691259b3"),
+                            Id = new Guid("50a3265c-41e8-4c31-80c9-7b245eef1fe1"),
                             Name = "ProMember",
                             NormalizedName = "PROMEMBER"
                         },
                         new
                         {
-                            Id = new Guid("6f3abf51-3178-440f-9649-6f8a910fd2d8"),
+                            Id = new Guid("a9a4bc1a-65c9-4c2c-911f-c5dca6d30999"),
                             Name = "PlusMember",
                             NormalizedName = "PLUSMEMBER"
                         },
                         new
                         {
-                            Id = new Guid("ebde3f21-d615-4d78-9f1c-1e6b39c1c9d0"),
+                            Id = new Guid("900c6835-d4aa-42fc-b34f-70ee724aadaf"),
                             Name = "BasicMember",
                             NormalizedName = "BASICMEMBER"
                         });

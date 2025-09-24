@@ -34,7 +34,7 @@ namespace CoHabit.API.Services.Implements
             return new ProfileResponse(
                 user.Id,
                 $"{user.FirstName} {user.LastName}",
-                user.Phone,
+                user.PhoneNumber ?? string.Empty,
                 user.Yob,
                 user.Sex.ToString(),
                 user.Image

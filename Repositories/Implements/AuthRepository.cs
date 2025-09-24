@@ -29,7 +29,7 @@ namespace CoHabit.API.Repositories.Implements
         public async Task<User?> GetUserByPhoneAsync(string phone)
         {
             return await _context.Users
-                .Where(u => u.Phone == phone && !u.IsRevoked)
+                .Where(u => u.PhoneNumber == phone)
                 .FirstOrDefaultAsync();
         }
 

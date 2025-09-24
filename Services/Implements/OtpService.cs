@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using CoHabit.API.Enitites;
 using CoHabit.API.Repositories.Interfaces;
 using CoHabit.API.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
 
 namespace CoHabit.API.Services.Implements
 {
@@ -15,8 +16,10 @@ namespace CoHabit.API.Services.Implements
     {
         private readonly IOtpRepository _otpRepository;
         private readonly IAuthRepository _authRepository;
-        public OtpService(IOtpRepository otpRepository, IAuthRepository authRepository)
+        private readonly UserManager<User> _userManager;
+        public OtpService(IOtpRepository otpRepository, IAuthRepository authRepository, UserManager<User> userManager)
         {
+            _userManager = userManager;
             _authRepository = authRepository;
             _otpRepository = otpRepository;
         }
@@ -82,8 +85,13 @@ namespace CoHabit.API.Services.Implements
         {
             try
             {
+                var user = await _authRepository.GetUserByPhoneAsync(phoneNumber);
+                if (user == null)
+                {
+                    throw new Exception("User with this phone number does not exist");
+                }
                 var otp = await _otpRepository.GetOtpByPhoneAsync(phoneNumber);
-
+                
                 if (otp == null)
                 {
                     return false;
@@ -101,6 +109,8 @@ namespace CoHabit.API.Services.Implements
                 }
 
                 await _otpRepository.VerifiedOtpAsync(otp);
+                user.PhoneNumberConfirmed = true;
+                await _userManager.UpdateAsync(user);
                 return true;
             }catch(Exception)
             {

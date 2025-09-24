@@ -158,7 +158,7 @@ namespace CoHabit.API.Controllers
         }
 
         [HttpPatch("revoke")]
-        // [Authorize]
+        // [Authorize(Roles = "BasicMember")]
         public async Task<IActionResult> RevokeToken([FromQuery] Guid userId)
         {
             try

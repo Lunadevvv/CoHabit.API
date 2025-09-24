@@ -26,10 +26,10 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
             entity.HasKey(e => e.Id);
             entity.Property(u => u.FirstName).HasMaxLength(10);
             entity.Property(u => u.LastName).HasMaxLength(10);
-            entity.Property(u => u.Phone).HasMaxLength(10);
+            entity.Property(u => u.PhoneNumber).HasMaxLength(10);
             entity.Property(u => u.Image).HasMaxLength(2048);
             entity.HasIndex(e => e.Id, "UQ__User__1788CC4DF7FFBA69").IsUnique();
-            entity.HasIndex(e => e.Phone, "UQ__User__536C85E43394AC26").IsUnique();
+            entity.HasIndex(e => e.PhoneNumber, "UQ__User__536C85E43394AC26").IsUnique();
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
 
             entity.HasMany(u => u.Characteristics)

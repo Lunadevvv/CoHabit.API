@@ -70,6 +70,10 @@ namespace CoHabit.API.Services.Implements
             {
                 throw new UnauthorizedAccessException("Invalid phone number or password.");
             }
+            if (user.IsRevoked)
+            {
+                throw new UnauthorizedAccessException("You have been banned!");
+            }
             var roles = await _userManager.GetRolesAsync(user);
 
             //Generate tokens
@@ -129,7 +133,7 @@ namespace CoHabit.API.Services.Implements
             {
                 Id = Guid.NewGuid(),
                 UserName = request.Phone,
-                Phone = request.Phone,
+                PhoneNumber = request.Phone,
                 CreatedAt = DateTime.UtcNow,
                 IsRevoked = false
             };

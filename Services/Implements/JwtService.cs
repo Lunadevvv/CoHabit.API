@@ -38,7 +38,7 @@ namespace CoHabit.API.Services.Implements
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.MobilePhone, user.Phone),
+                new Claim(ClaimTypes.MobilePhone, user.PhoneNumber ?? string.Empty),
             };
 
             claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
