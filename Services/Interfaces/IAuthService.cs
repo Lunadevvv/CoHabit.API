@@ -15,5 +15,6 @@ namespace CoHabit.API.Services.Interfaces
         Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request);
         Task ForgotPasswordAsync(ForgotPasswordRequest request);
         Task RevokeTokenAsync(Guid userId);
+        Task AssignRoleAsync(Guid userId, string role);
     }
 }
