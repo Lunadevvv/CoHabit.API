@@ -176,5 +176,24 @@ namespace CoHabit.API.Controllers
                 return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message));
             }
         }
+
+        [HttpPatch("role/assign")]
+        public async Task<IActionResult> AssignRole([FromQuery] Guid userId, [FromQuery] string role)
+        {
+            try
+            {
+                _logger.LogInformation("Assigning role {role} to user ID: {userId}", role, userId);
+                await _authService.AssignRoleAsync(userId, role);
+                return Ok(ApiResponse<object>.SuccessResponse(new { }, $"Assigned role {role} to user {userId} successfully."));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ApiResponse<object>.ErrorResponse(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message));
+            }
+        }
     }
 }
