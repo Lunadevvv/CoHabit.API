@@ -102,7 +102,7 @@ namespace CoHabit.API
                         OnMessageReceived = context =>
                         {
                             // Lấy token từ cookie thay vì header
-                            context.Token = context.Request.Cookies["access_token"];
+                            context.Token = context.Request.Cookies["AccessToken"];
                             return Task.CompletedTask;
                         }
                     };

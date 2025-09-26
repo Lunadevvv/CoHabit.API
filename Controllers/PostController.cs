@@ -188,5 +188,22 @@ namespace CoHabit.API.Controllers
         }
 
         //API Update Furniture
+        [HttpPatch("furniture/{postId}")]
+        public async Task<ActionResult> UpdateFurnitureInPost(Guid postId, [FromBody] List<string> furnitureIds)
+        {
+            try
+            {
+                var result = await _postService.UpdateFurnitureInPostAsync(postId, furnitureIds);
+                if (result == 0)
+                {
+                    return BadRequest(ApiResponse<object>.ErrorResponse("Failed to update furniture in post."));
+                }
+                return Ok(ApiResponse<object>.SuccessResponse(new { }, "Furniture in post updated successfully."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

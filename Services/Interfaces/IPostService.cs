@@ -20,5 +20,6 @@ namespace CoHabit.API.Services.Interfaces
         Task<int> CreatePostAsync(Guid userId, PostRequest req);
         Task<int> UpdatePostAsync(PostRequest req, Guid postId);
         Task<int> UpdatePostStatusAsync(Guid postId, PostStatus status);
+        Task<int> UpdateFurnitureInPostAsync(Guid postId, List<string> furnitureIds);
     }
 }

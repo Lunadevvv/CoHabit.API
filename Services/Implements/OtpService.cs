@@ -40,7 +40,7 @@ namespace CoHabit.API.Services.Implements
             }
 
             //Generate OTP code
-            var otpCode = new Random().Next(1000, 9999).ToString();
+            var otpCode = new Random().Next(100000, 999999).ToString();
             var otpHash = string.Empty;
             var salt = Array.Empty<byte>();
             

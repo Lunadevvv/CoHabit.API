@@ -15,8 +15,10 @@ namespace CoHabit.API.Services.Implements
     {
         private readonly IPostRepository _postRepository;
         private readonly IAuthRepository _authRepository;
-        public PostService(IPostRepository postRepository, IAuthRepository authRepository)
+        private readonly IFurnitureRepository _furnitureRepository;
+        public PostService(IPostRepository postRepository, IAuthRepository authRepository, IFurnitureRepository furnitureRepository)
         {
+            _furnitureRepository = furnitureRepository;
             _authRepository = authRepository;
             _postRepository = postRepository;
         }
@@ -145,6 +147,22 @@ namespace CoHabit.API.Services.Implements
             post.UpdatedAt = DateTime.UtcNow;
             _postRepository.UpdatePostAsync(post);
             return await _postRepository.SaveChangesAsync();
+        }
+
+        public async Task<int> UpdateFurnitureInPostAsync(Guid postId, List<string> furnitureIds)
+        {
+            var post = await _postRepository.GetPostByIdAsync(postId);
+            if (post == null) return 0;
+
+            post.Furnitures.Clear();
+
+            var furnitures = await _furnitureRepository.GetFurnituresAsync();
+
+            var selectedFurnitures = furnitures.Where(f => furnitureIds.Contains(f.FurId)).ToList();
+            post.Furnitures = selectedFurnitures;
+            _postRepository.UpdatePostAsync(post);
+            return await _postRepository.SaveChangesAsync();
+
         }
     }
 }
