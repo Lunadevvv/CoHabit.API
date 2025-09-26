@@ -55,6 +55,28 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
                         j.HasKey("UserId", "CharId");
                         j.ToTable("UserCharacteristics");
                     });
+
+            entity.HasMany(u => u.FavoritePosts)
+                    .WithMany(p => p.LikedByUsers)
+                    .UsingEntity<Dictionary<string, object>>(
+                    "UserFavoritePost",
+                    j => j
+                        .HasOne<Post>()
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .HasConstraintName("FK_UserFavoritePost_Post_PostId")
+                        .OnDelete(DeleteBehavior.NoAction),
+                    j => j
+                        .HasOne<User>()
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .HasConstraintName("FK_UserFavoritePost_User_UserId")
+                        .OnDelete(DeleteBehavior.NoAction),
+                    j =>
+                    {
+                        j.HasKey("UserId", "PostId");
+                        j.ToTable("UserFavoritePosts");
+                    });
         });
 
         builder.Entity<Characteristic>(entity =>

@@ -83,5 +83,12 @@ namespace CoHabit.API.Repositories.Implements
         {
             return await _context.SaveChangesAsync();
         }
+
+        public async Task<Post>? IsPostInFavoritesAsync(Guid userId, Guid postId)
+        {
+            return await _context.Posts
+                .Where(p => p.PostId == postId && p.LikedByUsers.Any(u => u.Id == userId))
+                .FirstOrDefaultAsync();
+        }
     }
 }

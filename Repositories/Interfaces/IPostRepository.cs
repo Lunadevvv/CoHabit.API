@@ -14,6 +14,7 @@ namespace CoHabit.API.Repositories.Interfaces
         Task<List<Post>> GetAllPostsAsync();
         Task<List<Post>> GetAllPostsByStatusAsync(PostStatus status);
         Task<List<Post>> GetAllPostsByUserAsync(Guid userId);
+        Task<Post>? IsPostInFavoritesAsync(Guid userId, Guid postId);
         Task<Post?> GetPostByIdAsync(Guid id);
         void CreatePostAsync(Post post);
         void UpdatePostAsync(Post post);

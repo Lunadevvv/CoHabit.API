@@ -14,5 +14,8 @@ namespace CoHabit.API.Repositories.Interfaces
         Task<User?> ValidateRefreshTokenAsync(Guid userId, string refreshToken);
         Task<List<Characteristic>> GetUserCharacteristicsByUserIdAsync(Guid userId);
         Task UpdateUserCharacteristics(User user, List<Characteristic> characteristics);
+        Task<List<Post>>? GetFavoritePostsByUserIdAsync(Guid userId);
+        Task AddFavoritePostAsync(User user, Post post);
+        Task RemoveFavoritePostAsync(User user, Post post);
     }
 }

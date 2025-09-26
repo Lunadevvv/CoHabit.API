@@ -95,5 +95,59 @@ namespace CoHabit.API.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        //Get favorite posts
+        [HttpGet("favorites")]
+        public async Task<ActionResult<List<Post>>> GetFavoritePosts()
+        {
+            try
+            {
+                var userId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
+                    ? parsedUserId
+                    : throw new Exception("Invalid user ID");
+                var favoritePosts = await _profileService.GetFavoritePostsByUserIdAsync(userId);
+                return Ok(favoritePosts);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        //Add post to favorites
+        [HttpPost("favorites/{postId}")]
+        public async Task<ActionResult> AddPostToFavorites(Guid postId)
+        {
+            try
+            {
+                var userId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
+                    ? parsedUserId
+                    : throw new Exception("Invalid user ID");
+                await _profileService.AddPostToFavoritesAsync(userId, postId);
+                return Ok("Post added to favorites successfully.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        //Remove post from favorites
+        [HttpDelete("favorites/{postId}")]
+        public async Task<ActionResult> RemovePostFromFavorites(Guid postId)
+        {
+            try
+            {
+                var userId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
+                    ? parsedUserId
+                    : throw new Exception("Invalid user ID");
+                await _profileService.RemovePostFromFavoritesAsync(userId, postId);
+                return Ok("Post removed from favorites successfully.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

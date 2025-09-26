@@ -17,5 +17,6 @@ namespace CoHabit.API.Enitites
         public virtual ICollection<Characteristic>? Characteristics { get; set; }
         public virtual ICollection<Payment>? Payments { get; set; }
         public virtual ICollection<Post>? Posts { get; set; }
+        public virtual ICollection<Post>? FavoritePosts { get; set; }
     }
 }
