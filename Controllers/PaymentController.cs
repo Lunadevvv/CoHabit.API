@@ -23,13 +23,13 @@ namespace CoHabit.API.Controllers
         private readonly ILogger<PaymentController> _logger;
         private readonly IPaymentService _paymentService;
         private readonly IVnPayService _vnPayService;
-        private readonly UserManager<User> _userManager;
+        private readonly IAuthService _authService;
 
-        public PaymentController(ILogger<PaymentController> logger, IVnPayService vnPayService, IPaymentService paymentService, UserManager<User> userManager)
+        public PaymentController(ILogger<PaymentController> logger, IVnPayService vnPayService, IPaymentService paymentService, IAuthService authService)
         {
             _paymentService = paymentService;
             _vnPayService = vnPayService;
-            _userManager = userManager;
+            _authService = authService;
             _logger = logger;
         }
 
@@ -95,7 +95,8 @@ namespace CoHabit.API.Controllers
                 {
                     PaymentId = paymentId,
                     Price = money,
-                    Status = PaymentStatus.InProgress.ToString()
+                    Status = PaymentStatus.InProgress.ToString(),
+                    Description = description,
                 };
                 await _paymentService.CreatePayment(paymentModel, Guid.TryParse(userId, out var parsedUserId) ? parsedUserId : Guid.Empty);
                 var paymentUrl = _vnPayService.CreatePaymentUrl(vnPayModel);
@@ -174,6 +175,7 @@ namespace CoHabit.API.Controllers
                         payment.Status = PaymentStatus.Success.ToString();
                         payment.Price = Int32.Parse(paymentResult.Money) / 100;
                         await _paymentService.UpdatePaymentStatus(payment);
+                        await _authService.AssignRoleAsync(Guid.Parse(payment.UserId.ToString()), payment.Description);
                         // return Redirect("http://localhost:5173/wallet/payment/success");
                         return Ok(new { msg = "Payment successfully" });
                     }

@@ -10,6 +10,7 @@ namespace CoHabit.API.Enitites
     {
         public string PaymentId { get; set; } = string.Empty;
         public int Price { get; set; } = 0;
+        public string Description { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; }
