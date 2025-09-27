@@ -26,5 +26,7 @@ namespace CoHabit.API.Enitites
         public virtual ICollection<Furniture>? Furnitures { get; set; }
         [JsonIgnore]
         public virtual ICollection<User>? LikedByUsers { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Order>? Orders { get; set; }
     }
 }

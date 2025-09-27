@@ -16,6 +16,7 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
     public DbSet<Payment> Payments { get; set; }
     public DbSet<Furniture> Furnitures { get; set; }
     public DbSet<Post> Posts { get; set; }
+    public DbSet<Order> Orders { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
 
@@ -203,6 +204,25 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
                         j.HasKey("PostId", "FurId");
                         j.ToTable("PostFurnitures");
                     });
+        });
+
+        builder.Entity<Order>(entity =>
+        {
+            entity.HasKey(e => e.OrderId);
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime").IsRequired();
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.PostId).IsRequired();
+            entity.Property(e => e.OwnerId).IsRequired();
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.Orders)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(e => e.Post)
+                .WithMany(p => p.Orders)
+                .HasForeignKey(e => e.PostId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
     }
 }

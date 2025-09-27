@@ -136,6 +136,8 @@ namespace CoHabit.API
             builder.Services.AddScoped<IFurnitureService, FurnitureService>();
             builder.Services.AddScoped<IPostRepository, PostRepository>();
             builder.Services.AddScoped<IPostService, PostService>();
+            builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+            builder.Services.AddScoped<IOrderService, OrderService>();
 
             var app = builder.Build();
 
