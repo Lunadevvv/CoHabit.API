@@ -116,7 +116,7 @@ namespace CoHabit.API
                 options.AddPolicy("AllowFrontend",
                     policy =>
                     {
-                        policy.WithOrigins("http://localhost:5173")
+                        policy.WithOrigins("http://localhost:3000")
                             .AllowAnyHeader()
                             .AllowAnyMethod()
                             .AllowCredentials(); // QUAN TRỌNG: Cho phép cookies
@@ -147,6 +147,15 @@ namespace CoHabit.API
                 client.BaseAddress = new Uri(builder.Configuration["PayOS:BaseUrl"] ?? "https://api-merchant.payos.vn/");
                 client.Timeout = TimeSpan.FromSeconds(30);
             });
+
+            // Brevo configuration and HttpClient
+            builder.Services.Configure<BrevoConfig>(builder.Configuration.GetSection("Brevo"));
+            builder.Services.AddHttpClient("brevo", client =>
+            {
+                client.BaseAddress = new Uri(builder.Configuration["Brevo:BaseUrl"] ?? "https://api.brevo.com/v3/");
+                client.Timeout = TimeSpan.FromSeconds(30);
+            });
+
             builder.Services.AddScoped<IPayOSService, PayOSService>();
 
             var app = builder.Build();

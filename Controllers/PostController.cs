@@ -24,7 +24,9 @@ namespace CoHabit.API.Controllers
             _postService = postService;
         }
 
+        //API lấy tất cả bài viết với phân trang cho user
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<PaginationResponse<List<Post>>>> GetAllPosts(int currentPage, int pageSize)
         {
             try
@@ -40,6 +42,7 @@ namespace CoHabit.API.Controllers
 
         //API lấy tất cả bài viết của admin
         [HttpGet("admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<List<PostResponse>>> GetAllAdminPosts()
         {
             try
@@ -90,6 +93,7 @@ namespace CoHabit.API.Controllers
         }
         //API lấy detail bài viết theo postId
         [HttpGet("{postId}")]
+        [Authorize]
         public async Task<ActionResult<PostResponse>> GetPostById(Guid postId)
         {
             try
@@ -109,7 +113,7 @@ namespace CoHabit.API.Controllers
 
         //API tạo bài viết
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = "Admin, PlusMember, ProMember, Moderator")]
         public async Task<ActionResult> CreatePost([FromBody] PostRequest req)
         {
             try
@@ -131,7 +135,7 @@ namespace CoHabit.API.Controllers
         }
         //API chinh sửa bài viết
         [HttpPut("{postId}")]
-        [Authorize]
+        [Authorize(Roles = "Admin, Moderator")]
         public async Task<ActionResult> UpdatePost([FromBody] PostRequest req, Guid postId)
         {
             try
@@ -150,7 +154,7 @@ namespace CoHabit.API.Controllers
         }
         //API update status thành Hidden cho User
         [HttpPatch("user/{postId}/hidden")]
-        // [Authorize]
+        [Authorize(Roles = "PlusMember, ProMember")]
         public async Task<ActionResult> UpdatePostStatusToHiddenByUser(Guid postId)
         {
             try
@@ -169,7 +173,7 @@ namespace CoHabit.API.Controllers
         }
         //API update status cho Admin
         [HttpPatch("user/{postId}/{status}")]
-        // [Authorize]
+        [Authorize(Roles = "Admin, Moderator")]
         public async Task<ActionResult> UpdatePostStatusToHiddenByUser(Guid postId, PostStatus status)
         {
             try
@@ -189,6 +193,7 @@ namespace CoHabit.API.Controllers
 
         //API Update Furniture
         [HttpPatch("furniture/{postId}")]
+        [Authorize(Roles = "PlusMember, ProMember")]
         public async Task<ActionResult> UpdateFurnitureInPost(Guid postId, [FromBody] List<string> furnitureIds)
         {
             try

@@ -28,15 +28,11 @@ namespace CoHabit.API.Controllers
     {
         private readonly ILogger<PaymentController> _logger;
         private readonly IPaymentService _paymentService;
-    private readonly IOptions<PayOSConfig> _payOSConfig;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly Services.Interfaces.IPayOSService _payOSService;
+        private readonly IPayOSService _payOSService;
 
-        public PaymentController(ILogger<PaymentController> logger, IPaymentService paymentService, IOptions<PayOSConfig> payOSConfig, IHttpClientFactory httpClientFactory, Services.Interfaces.IPayOSService payOSService)
+        public PaymentController(ILogger<PaymentController> logger, IPaymentService paymentService, IPayOSService payOSService)
         {
-            _payOSConfig = payOSConfig;
             _paymentService = paymentService;
-            _httpClientFactory = httpClientFactory;
             _payOSService = payOSService;
             _logger = logger;
         }

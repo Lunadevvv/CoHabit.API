@@ -33,7 +33,7 @@ namespace CoHabit.API.Controllers
         {
             try
             {
-                _logger.LogInformation("Registering user with phone: {phone}", request.Phone);
+                _logger.LogInformation("Registering user with phone: {phone} and email: {email}", request.Phone, request.Email);
                 await _authService.RegisterUserAsync(request);
                 return Ok(ApiResponse<object>.SuccessResponse(new { }, "User registered successfully."));
             }
@@ -92,12 +92,12 @@ namespace CoHabit.API.Controllers
         }
 
         [HttpPost("send-otp")]
-        public async Task<IActionResult> SendOtp([FromQuery] string phoneNumber)
+        public async Task<IActionResult> SendOtp([FromQuery] string phoneNumber, [FromQuery] string email)
         {
-            _logger.LogInformation("Sending OTP to phone number: {phoneNumber}", phoneNumber);
-            var otp = await _otpService.GenerateAndSendOtpAsync(phoneNumber);
+            _logger.LogInformation("Sending OTP to phone email: {email}", email);
+            await _otpService.GenerateAndSendOtpAsync(phoneNumber, email);
             return Ok(ApiResponse<object>.SuccessResponse(
-                new { Otp = otp },
+                new(),
                 "OTP sent successfully."
             ));
         }
@@ -105,8 +105,8 @@ namespace CoHabit.API.Controllers
         [HttpPost("verify-otp")]
         public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request)
         {
-            _logger.LogInformation("Verifying OTP for phone number: {phoneNumber}", request.Phone);
-            var isValid = await _otpService.VerifyOtpAsync(request.Phone, request.Code);
+            _logger.LogInformation("Verifying OTP for phone number: {phoneNumber} and email: {email}", request.Phone, request.Email);
+            var isValid = await _otpService.VerifyOtpAsync(request.Phone, request.Email, request.Code);
             if (!isValid)
             {
                 return BadRequest(ApiResponse<object>.ErrorResponse("Invalid or expired OTP."));
@@ -158,7 +158,7 @@ namespace CoHabit.API.Controllers
         }
 
         [HttpPatch("revoke")]
-        // [Authorize(Roles = "BasicMember")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RevokeToken([FromQuery] Guid userId)
         {
             try

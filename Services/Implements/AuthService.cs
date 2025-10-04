@@ -162,6 +162,8 @@ namespace CoHabit.API.Services.Implements
                 Id = Guid.NewGuid(),
                 UserName = request.Phone,
                 PhoneNumber = request.Phone,
+                Email = request.Email,
+                EmailConfirmed = true,
                 CreatedAt = DateTime.UtcNow,
                 IsRevoked = false
             };

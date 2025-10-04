@@ -10,6 +10,7 @@ using CoHabit.API.Helpers;
 using CoHabit.API.Repositories.Interfaces;
 using CoHabit.API.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 
 namespace CoHabit.API.Services.Implements
 {
@@ -18,18 +19,22 @@ namespace CoHabit.API.Services.Implements
         private readonly IOtpRepository _otpRepository;
         private readonly IAuthRepository _authRepository;
         private readonly UserManager<User> _userManager;
-        public OtpService(IOtpRepository otpRepository, IAuthRepository authRepository, UserManager<User> userManager)
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly BrevoConfig _config;
+        public OtpService(IOtpRepository otpRepository, IAuthRepository authRepository, UserManager<User> userManager, IHttpClientFactory httpClientFactory, IOptions<BrevoConfig> config)
         {
-            _userManager = userManager;
-            _authRepository = authRepository;
+            _config = config.Value;
+            _httpClientFactory = httpClientFactory;
             _otpRepository = otpRepository;
+            _authRepository = authRepository;
+            _userManager = userManager;
         }
         public async Task CleanupExpiredOtpsAsync()
         {
             await _otpRepository.CleanupExpiredOtpsAsync();
         }
 
-        public async Task<string> GenerateAndSendOtpAsync(string phoneNumber)
+        public async Task GenerateAndSendOtpAsync(string phoneNumber, string email)
         {
             await CleanupExpiredOtpsAsync();
 
@@ -65,6 +70,7 @@ namespace CoHabit.API.Services.Implements
             {
                 OtpId = Guid.NewGuid(),
                 Phone = phoneNumber,
+                Email = email,
                 CodeHashed = otpHash,
                 Salt = salt,
                 CreatedAt = DateTime.UtcNow,
@@ -78,21 +84,37 @@ namespace CoHabit.API.Services.Implements
             {
                 throw new Exception("Failed to generate OTP. Your have requested OTP too many times.");
             }
-            //Send OTP code via SMS (Placeholder)
-            // SpeedSMSAPI smsApi = new SpeedSMSAPI("w0K2oXFmgQfK05bvubtWif7ddzYsG0_T");
-            // var response = smsApi.sendSMS(new String[] { phoneNumber }, $"Ma OTP cua ban la: {otpCode}. Ma co hieu luc trong 5 phut.", SpeedSMSAPI.TYPE_CSKH, "84357968555");
-            //Return the OTP code for testing purposes (In production, do not return the OTP code
-            return otpCode;
+            //Send OTP code via Email (Placeholder)
+            try
+            {
+                var client = _httpClientFactory.CreateClient("brevo");
+                client.DefaultRequestHeaders.Add("api-key", _config.ApiKey ?? throw new Exception("Brevo API key is not configured."));
+                var emailContent = new
+                {
+                    sender = new { email = "cohabit.vn@gmail.com" },
+                    to = new[] { new { email = email } },
+                    subject = "Your OTP Code",
+                    htmlContent = $"<html><body><h1>Your OTP Code</h1><p>Your OTP code is: <strong>{otpCode}</strong></p><p>This code will expire in 5 minutes.</p></body></html>",
+                };
+                var json = System.Text.Json.JsonSerializer.Serialize(emailContent);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync("smtp/email", content);
+                response.EnsureSuccessStatusCode();
+            }
+            catch (Exception)
+            {
+                throw new Exception("Failed to send OTP email.");
+            }         
         }
 
-        public async Task<bool> VerifyOtpAsync(string phoneNumber, string code)
+        public async Task<bool> VerifyOtpAsync(string phoneNumber, string email, string code)
         {
             try
             {
                 var user = await _authRepository.GetUserByPhoneAsync(phoneNumber);
-                if (user == null)
+                if (user != null)
                 {
-                    throw new Exception("User with this phone number does not exist");
+                    throw new Exception("User with this phone number existed");
                 }
                 var otp = await _otpRepository.GetOtpByPhoneAsync(phoneNumber);
 
@@ -113,8 +135,6 @@ namespace CoHabit.API.Services.Implements
                 }
 
                 await _otpRepository.VerifiedOtpAsync(otp);
-                user.PhoneNumberConfirmed = true;
-                await _userManager.UpdateAsync(user);
                 return true;
             }
             catch (Exception)

@@ -6,6 +6,7 @@ using CoHabit.API.DTOs.Requests;
 using CoHabit.API.DTOs.Responses;
 using CoHabit.API.Helpers;
 using CoHabit.API.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CoHabit.API.Controllers
@@ -21,6 +22,7 @@ namespace CoHabit.API.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<FurnitureResponse>>> GetAll()
         {
             var furnitures = await _furnitureService.GetFurnituresAsync();
@@ -29,6 +31,7 @@ namespace CoHabit.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Create([FromQuery] string name)
         {
             await _furnitureService.CreateFurnitureAsync(name);
@@ -36,6 +39,7 @@ namespace CoHabit.API.Controllers
         }
 
         [HttpPut]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Update([FromBody] FurnitureRequest request)
         {
             try
@@ -50,6 +54,7 @@ namespace CoHabit.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Delete(string id)
         {
             try

@@ -19,9 +19,9 @@ namespace CoHabit.API.Controllers
     {
         private readonly IPaymentService _paymentService;
         private readonly IOptions<PayOSConfig> _payosConfig;
-    private readonly Services.Interfaces.IPayOSService _payOSService;
+    private readonly IPayOSService _payOSService;
 
-        public WebhookController(IPaymentService paymentService, IOptions<PayOSConfig> payosConfig, Services.Interfaces.IPayOSService payOSService)
+        public WebhookController(IPaymentService paymentService, IOptions<PayOSConfig> payosConfig, IPayOSService payOSService)
         {
             _paymentService = paymentService;
             _payosConfig = payosConfig;
@@ -31,7 +31,7 @@ namespace CoHabit.API.Controllers
         [HttpPost("payos")]
         public async Task<IActionResult> PayOSWebhook()
         {
-            using var reader = new System.IO.StreamReader(Request.Body);
+            using var reader = new StreamReader(Request.Body);
             var body = await reader.ReadToEndAsync();
 
             var doc = System.Text.Json.JsonDocument.Parse(body);
@@ -87,14 +87,14 @@ namespace CoHabit.API.Controllers
             return Ok();
         }
 
-        private static bool ValidateHmacSha256(string key, string data, string? signatureHeader)
-        {
-            if (string.IsNullOrEmpty(key)) return true; // can't validate
-            if (string.IsNullOrEmpty(signatureHeader)) return false;
-            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key));
-            var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(data));
-            var computed = BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant();
-            return computed == signatureHeader.ToLowerInvariant();
-        }
+        // private static bool ValidateHmacSha256(string key, string data, string? signatureHeader)
+        // {
+        //     if (string.IsNullOrEmpty(key)) return true; // can't validate
+        //     if (string.IsNullOrEmpty(signatureHeader)) return false;
+        //     using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key));
+        //     var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(data));
+        //     var computed = BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant();
+        //     return computed == signatureHeader.ToLowerInvariant();
+        // }
     }
 }
