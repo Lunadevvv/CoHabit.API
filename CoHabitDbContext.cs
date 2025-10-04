@@ -140,7 +140,7 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
         builder.Entity<Payment>(entity =>
         {
             entity.HasKey(e => e.PaymentId);
-            entity.Property(e => e.PaymentId).HasMaxLength(6);
+            entity.Property(e => e.PaymentId).HasMaxLength(26);
             entity.Property(e => e.Price).IsRequired();
             entity.Property(e => e.Status).HasMaxLength(20).IsRequired();
             entity.Property(e => e.CreatedDate).HasColumnType("datetime").IsRequired();

@@ -6,6 +6,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using CoHabit.API.Enitites;
+using CoHabit.API.Helpers;
 using CoHabit.API.Repositories.Interfaces;
 using CoHabit.API.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -75,9 +76,12 @@ namespace CoHabit.API.Services.Implements
             var result = await _otpRepository.GenerateOtpAsync(otp);
             if (!result)
             {
-                throw new Exception("Failed to generate OTP");
+                throw new Exception("Failed to generate OTP. Your have requested OTP too many times.");
             }
             //Send OTP code via SMS (Placeholder)
+            // SpeedSMSAPI smsApi = new SpeedSMSAPI("w0K2oXFmgQfK05bvubtWif7ddzYsG0_T");
+            // var response = smsApi.sendSMS(new String[] { phoneNumber }, $"Ma OTP cua ban la: {otpCode}. Ma co hieu luc trong 5 phut.", SpeedSMSAPI.TYPE_CSKH, "84357968555");
+            //Return the OTP code for testing purposes (In production, do not return the OTP code
             return otpCode;
         }
 
@@ -91,7 +95,7 @@ namespace CoHabit.API.Services.Implements
                     throw new Exception("User with this phone number does not exist");
                 }
                 var otp = await _otpRepository.GetOtpByPhoneAsync(phoneNumber);
-                
+
                 if (otp == null)
                 {
                     return false;
@@ -112,11 +116,12 @@ namespace CoHabit.API.Services.Implements
                 user.PhoneNumberConfirmed = true;
                 await _userManager.UpdateAsync(user);
                 return true;
-            }catch(Exception)
+            }
+            catch (Exception)
             {
                 throw new Exception("Verify OTP Service Error");
             }
-            
+
         }
     }
 }

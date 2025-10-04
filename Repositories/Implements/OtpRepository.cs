@@ -29,9 +29,16 @@ namespace CoHabit.API.Repositories.Implements
 
         public async Task<bool> GenerateOtpAsync(Otp otp)
         {
-            await _context.Otps.AddAsync(otp);
-            var result = await _context.SaveChangesAsync();
-            return result > 0;
+            try
+            {
+                await _context.Otps.AddAsync(otp);
+                var result = await _context.SaveChangesAsync();
+                return result > 0;
+            }catch(Exception)
+            {
+                return false;
+            }
+            
         }
 
         public async Task<Otp> GetOtpByPhoneAsync(string phoneNumber)

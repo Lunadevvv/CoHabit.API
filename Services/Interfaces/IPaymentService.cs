@@ -9,11 +9,11 @@ namespace CoHabit.API.Services.Interfaces
     public interface IPaymentService
     {
         Task<List<Payment>> GetAllPayment();
-        Task<List<Payment>> GetAllUserPayment(Guid userId);
+        Task<List<Payment>> GetAllUserPayment(string userId);
         Task<string> GetUserByPaymentId(string paymentId);
         Task<Payment> GetPayment(string paymentId);
-        Task CreatePayment(Payment payment, Guid userId);
+        Task CreatePayment(Payment payment, string userId);
         Task UpdatePaymentStatus (Payment payment);
-        Task<string> GeneratePaymentId();
+        string GeneratePaymentId(bool useUtc = true, int randomDigits = 3);
     }
 }

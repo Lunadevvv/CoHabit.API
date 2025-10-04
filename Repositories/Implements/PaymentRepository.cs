@@ -22,10 +22,10 @@ namespace CoHabit.API.Repositories.Implements
             return await _context.Payments.ToListAsync();
         }
 
-        public async Task<List<Payment>> GetAllUserPayment(Guid userId)
+        public async Task<List<Payment>> GetAllUserPayment(string userId)
         {
             return await _context.Payments
-                .Where(p => p.UserId == userId)
+                .Where(p => p.UserId.Equals(userId))
                 .ToListAsync();
         }
 

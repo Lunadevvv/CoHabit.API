@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using CoHabit.API.Enums;
 
 namespace CoHabit.API.Enitites
 {
     public class Payment
     {
-        public string PaymentId { get; set; } = string.Empty;
+        public required string PaymentId { get; set; }
         public int Price { get; set; } = 0;
         public string Description { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
+        public PaymentStatus Status { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; }
         public Guid UserId { get; set; }

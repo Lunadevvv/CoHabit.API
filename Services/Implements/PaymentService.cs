@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using CoHabit.API.Enitites;
 using CoHabit.API.Enums;
@@ -24,7 +26,7 @@ namespace CoHabit.API.Services.Implements
             return await _paymentRepository.GetAllPayment();
         }
 
-        public async Task<List<Payment>> GetAllUserPayment(Guid userId)
+        public async Task<List<Payment>> GetAllUserPayment(string userId)
         {
             return await _paymentRepository.GetAllUserPayment(userId);
         }
@@ -38,7 +40,7 @@ namespace CoHabit.API.Services.Implements
             }
             return payment;
         }
-        public async Task CreatePayment(Payment payment, Guid userId)
+        public async Task CreatePayment(Payment payment, string userId)
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
             if (user == null)
@@ -52,13 +54,30 @@ namespace CoHabit.API.Services.Implements
             await _paymentRepository.SaveChangesAsync();
         }
 
-        public async Task<string> GeneratePaymentId()
+        public string GeneratePaymentId(bool useUtc = true, int randomDigits = 3)
         {
-            var lastPayment = await _paymentRepository.GetLastPayment();
-            if (lastPayment == null) return "Pm0001";
-            int id = int.Parse(lastPayment.PaymentId.Substring(lastPayment.PaymentId.Length-4)) + 1; // lấy id cuối cùng và cộng thêm 1
-            string generatedId = "Pm" + id.ToString("D4");
-            return generatedId;
+            var now = useUtc ? DateTimeOffset.UtcNow : DateTimeOffset.Now;
+            // yyyyMMddHHmmssfff -> đến milliseconds
+            var id = now.ToString("yyyyMMddHHmmssfff");
+
+            // Lấy microseconds trong giây (0..999999), sau đó lấy phần vượt quá milliseconds (3 chữ số)
+            long microseconds = (now.Ticks % TimeSpan.TicksPerSecond) / 10; // 1 tick = 100ns -> /10 => µs
+            int microRemainder = (int)(microseconds % 1000); // phần thập phân nhỏ hơn 1 ms
+            id += microRemainder.ToString("D3");
+
+            // Thêm chữ số ngẫu nhiên an toàn (nếu cần)
+            if (randomDigits > 0)
+            {
+                var sb = new StringBuilder(randomDigits);
+                using var rng = RandomNumberGenerator.Create();
+                var buf = new byte[randomDigits];
+                rng.GetBytes(buf);
+                foreach (var b in buf)
+                    sb.Append((b % 10).ToString());
+                id += sb.ToString();
+            }
+
+            return id;
         }
 
         public async Task UpdatePaymentStatus(Payment payment)

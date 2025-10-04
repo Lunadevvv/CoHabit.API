@@ -9,7 +9,7 @@ namespace CoHabit.API.Repositories.Interfaces
     public interface IPaymentRepository
     {
         Task<List<Payment>> GetAllPayment();
-        Task<List<Payment>> GetAllUserPayment(Guid userId);
+        Task<List<Payment>> GetAllUserPayment(string userId);
         Task<Payment?> GetLastPayment();
         Task<Payment?> GetPayment(string paymentId);
         void CreatePayment(Payment payment);
