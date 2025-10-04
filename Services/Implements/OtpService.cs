@@ -93,8 +93,69 @@ namespace CoHabit.API.Services.Implements
                 {
                     sender = new { email = "cohabit.vn@gmail.com" },
                     to = new[] { new { email = email } },
-                    subject = "Your OTP Code",
-                    htmlContent = $"<html><body><h1>Your OTP Code</h1><p>Your OTP code is: <strong>{otpCode}</strong></p><p>This code will expire in 5 minutes.</p></body></html>",
+                    subject = "Verification Code - CoHabit",
+                    htmlContent = $@"
+                    <html>
+                    <body style=""margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f7fa;"">
+                        <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" width=""100%"" style=""background-color: #f5f7fa;"">
+                            <tr>
+                                <td style=""padding: 40px 20px;"">
+                                    <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" width=""100%"" style=""max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);"">
+                                        <tr>
+                                            <td style=""padding: 40px 40px 30px; text-align: center; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 12px 12px 0 0;"">
+                                                <h1 style=""margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;"">Mã xác thực của bạn</h1>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style=""padding: 40px;"">
+                                                <p style=""margin: 0 0 24px; color: #1e293b; font-size: 16px; line-height: 1.6;"">
+                                                    Xin chào,
+                                                </p>
+                                                <p style=""margin: 0 0 32px; color: #475569; font-size: 15px; line-height: 1.6;"">
+                                                    Bạn đã yêu cầu mã xác thực OTP. Vui lòng sử dụng mã dưới đây để hoàn tất xác thực:
+                                                </p>
+                                                <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" width=""100%"">
+                                                    <tr>
+                                                        <td style=""padding: 30px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; text-align: center; border: 2px solid #3b82f6;"">
+                                                            <div style=""font-size: 42px; font-weight: 700; letter-spacing: 8px; color: #1e40af; font-family: 'Courier New', monospace;"">
+                                                                {otpCode}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                                <p style=""margin: 32px 0 24px; color: #475569; font-size: 15px; line-height: 1.6;"">
+                                                    Mã này sẽ <strong style=""color: #1e293b;"">hết hạn sau 5 phút</strong> kể từ khi được gửi.
+                                                </p>
+                                                <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" width=""100%"" style=""margin-top: 32px;"">
+                                                    <tr>
+                                                        <td style=""padding: 20px; background-color: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px;"">
+                                                            <p style=""margin: 0; color: #92400e; font-size: 14px; line-height: 1.5;"">
+                                                                <strong>⚠️ Lưu ý bảo mật:</strong> Không chia sẻ mã này với bất kỳ ai. Chúng tôi sẽ không bao giờ yêu cầu mã OTP qua điện thoại hoặc email.
+                                                            </p>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                                <p style=""margin: 32px 0 0; color: #64748b; font-size: 14px; line-height: 1.6;"">
+                                                    Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này hoặc liên hệ với chúng tôi nếu bạn có bất kỳ thắc mắc nào.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style=""padding: 30px 40px; background-color: #f8fafc; border-radius: 0 0 12px 12px; border-top: 1px solid #e2e8f0;"">
+                                                <p style=""margin: 0 0 8px; color: #64748b; font-size: 13px; line-height: 1.5; text-align: center;"">
+                                                    Email này được gửi từ <strong style=""color: #1e293b;"">CoHabit</strong>
+                                                </p>
+                                                <p style=""margin: 0; color: #94a3b8; font-size: 12px; line-height: 1.5; text-align: center;"">
+                                                    © 2025 CoHabit. All rights reserved.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </body>
+                    </html>"
                 };
                 var json = System.Text.Json.JsonSerializer.Serialize(emailContent);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -139,7 +200,7 @@ namespace CoHabit.API.Services.Implements
             }
             catch (Exception)
             {
-                throw new Exception("Verify OTP Service Error");
+                return false;
             }
 
         }
