@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
@@ -6,6 +8,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using CoHabit.API.DTOs.Requests;
 using CoHabit.API.DTOs.Responses;
+using CoHabit.API.Enitites;
 using CoHabit.API.Helpers;
 using CoHabit.API.Services.Interfaces;
 using Microsoft.Extensions.Options;
@@ -17,7 +20,6 @@ namespace CoHabit.API.Services.Implements
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly PayOSConfig _config;
         private readonly ILogger<PayOSService> _logger;
-
 
         public PayOSService(IHttpClientFactory httpClientFactory, IOptions<PayOSConfig> options, ILogger<PayOSService> logger)
         {
@@ -82,11 +84,66 @@ namespace CoHabit.API.Services.Implements
                 _logger.LogWarning("PayOS webhook signature is empty");
                 return false;
             }
-            _logger.LogInformation("Webhook DataJson: {DataJson}", dataJson);
-            _logger.LogInformation("Webhook Signature: {Signature}", signature);
-            var computed = ComputeHmacSha256(_config.ChecksumKey, dataJson);
-            _logger.LogInformation("Computed Signature: {Computed}", computed);
-            return computed.Equals(signature.ToLowerInvariant());
+            
+            try
+            {
+                // Parse the data JSON to extract fields
+                using var doc = JsonDocument.Parse(dataJson);
+                var root = doc.RootElement;
+                
+                // Convert to sorted dictionary
+                var sortedData = new SortedDictionary<string, string>();
+                
+                foreach (var property in root.EnumerateObject())
+                {
+                    var key = property.Name;
+                    var value = property.Value;
+                    
+                    string stringValue;
+                    if (value.ValueKind == JsonValueKind.Null || value.ValueKind == JsonValueKind.Undefined)
+                    {
+                        stringValue = "";
+                    }
+                    else if (value.ValueKind == JsonValueKind.String)
+                    {
+                        stringValue = value.GetString() ?? "";
+                    }
+                    else if (value.ValueKind == JsonValueKind.Number)
+                    {
+                        stringValue = value.GetRawText();
+                    }
+                    else if (value.ValueKind == JsonValueKind.True || value.ValueKind == JsonValueKind.False)
+                    {
+                        stringValue = value.GetBoolean().ToString().ToLower();
+                    }
+                    else if (value.ValueKind == JsonValueKind.Array || value.ValueKind == JsonValueKind.Object)
+                    {
+                        stringValue = value.GetRawText();
+                    }
+                    else
+                    {
+                        stringValue = value.GetRawText();
+                    }
+                    
+                    sortedData[key] = stringValue;
+                }
+                
+                // Create signature string in format: key1=value1&key2=value2...
+                var signatureData = string.Join("&", sortedData.Select(kvp => $"{kvp.Key}={kvp.Value}"));
+                
+                _logger.LogInformation("Webhook Signature Data: {SignatureData}", signatureData);
+                _logger.LogInformation("Webhook Expected Signature: {Signature}", signature);
+                
+                var computed = ComputeHmacSha256(_config.ChecksumKey, signatureData);
+                _logger.LogInformation("Computed Signature: {Computed}", computed);
+                
+                return computed.Equals(signature, StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error verifying webhook signature");
+                return false;
+            }
         }
 
         private static string ComputeHmacSha256(string key, string data)
@@ -95,6 +152,17 @@ namespace CoHabit.API.Services.Implements
             using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key));
             var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(data));
             return BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant();
+        }
+
+        public ReturnURLQueryResponse GetPaymentInfo(IQueryCollection query)
+        {
+            var res =
+                new ReturnURLQueryResponse
+                {
+                    PaymentLinkId = query["id"],
+                    Status = query["status"]
+                };
+            return res;
         }
     }
 }

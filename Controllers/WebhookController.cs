@@ -20,9 +20,10 @@ namespace CoHabit.API.Controllers
         private readonly IPaymentService _paymentService;
         private readonly IOptions<PayOSConfig> _payosConfig;
         private readonly IPayOSService _payOSService;
-
-        public WebhookController(IPaymentService paymentService, IOptions<PayOSConfig> payosConfig, IPayOSService payOSService)
+        private readonly ILogger<WebhookController> _logger;
+        public WebhookController(IPaymentService paymentService, IOptions<PayOSConfig> payosConfig, IPayOSService payOSService, ILogger<WebhookController> logger)
         {
+            _logger = logger;
             _paymentService = paymentService;
             _payosConfig = payosConfig;
             _payOSService = payOSService;
@@ -52,12 +53,14 @@ namespace CoHabit.API.Controllers
             {
                 return Unauthorized();
             }
-
+            _logger.LogInformation("Received valid PayOS webhook: {data}", dataJson);
             // Try to extract orderCode or paymentLinkId from data
             string? paymentLinkId = null;
             if (dataElem.TryGetProperty("paymentLinkId", out var linkIdElem))
             {
                 paymentLinkId = linkIdElem.GetString();
+                _logger.LogInformation("Webhook for paymentLinkId: {paymentLinkId}", paymentLinkId);
+                
             }
             // else if (dataElem.TryGetProperty("orderCode", out var orderCodeElem))
             // {
@@ -65,25 +68,6 @@ namespace CoHabit.API.Controllers
             //     paymentId = orderCodeElem.GetRawText();
             // }
             if (string.IsNullOrEmpty(paymentLinkId)) return BadRequest("Missing payment identifier in data");
-
-            PaymentStatus newStatus = PaymentStatus.InProgress;
-            if (dataElem.TryGetProperty("status", out var statusElem))
-            {
-                var s = statusElem.GetString();
-                if (!string.IsNullOrEmpty(s))
-                {
-                    if (s.Equals("SUCCESS", StringComparison.OrdinalIgnoreCase)) newStatus = PaymentStatus.Success;
-                    else if (s.Equals("FAILED", StringComparison.OrdinalIgnoreCase)) newStatus = PaymentStatus.Failed;
-                    else if (s.Equals("CANCELLED", StringComparison.OrdinalIgnoreCase)) newStatus = PaymentStatus.Cancelled;
-                    else newStatus = PaymentStatus.InProgress;
-                }
-            }
-
-            var payment = await _paymentService.GetPaymentByPaymentLinkId(paymentLinkId);
-            if (payment == null) return NotFound();
-            payment.Status = newStatus;
-            await _paymentService.UpdatePaymentStatus(payment);
-
             return Ok();
         }
 

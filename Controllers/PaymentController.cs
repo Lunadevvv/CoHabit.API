@@ -29,11 +29,11 @@ namespace CoHabit.API.Controllers
     {
         private readonly ILogger<PaymentController> _logger;
         private readonly IPaymentService _paymentService;
-    private readonly IOptions<PayOSConfig> _payOSConfig;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly Services.Interfaces.IPayOSService _payOSService;
+        private readonly IOptions<PayOSConfig> _payOSConfig;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IPayOSService _payOSService;
 
-        public PaymentController(ILogger<PaymentController> logger, IPaymentService paymentService, IOptions<PayOSConfig> payOSConfig, IHttpClientFactory httpClientFactory, Services.Interfaces.IPayOSService payOSService)
+        public PaymentController(ILogger<PaymentController> logger, IPaymentService paymentService, IOptions<PayOSConfig> payOSConfig, IHttpClientFactory httpClientFactory, IPayOSService payOSService)
         {
             _payOSConfig = payOSConfig;
             _paymentService = paymentService;
@@ -109,6 +109,39 @@ namespace CoHabit.API.Controllers
             });
         }
 
-        
+        [HttpPatch("update-status")]
+        public async Task<IActionResult> UpdatePaymentStatus()
+        {
+            if (Request.QueryString.HasValue)
+            {
+                var paymentResult = _payOSService.GetPaymentInfo(Request.Query);
+                if (paymentResult == null || string.IsNullOrEmpty(paymentResult.PaymentLinkId))
+                {
+                    return BadRequest("Invalid payment information");
+                }
+                var payment = await _paymentService.GetPaymentByPaymentLinkId(paymentResult.PaymentLinkId);
+                if (payment == null)
+                {
+                    return NotFound("Payment not found");
+                }
+                // Update payment status based on the status from query
+                if (paymentResult.Status == "PAID")
+                {
+                    payment.Status = PaymentStatus.Success;
+                }
+                else if (paymentResult.Status == "CANCELLED")
+                {
+                    payment.Status = PaymentStatus.Cancelled;
+                }
+                else
+                {
+                    payment.Status = PaymentStatus.InProgress;
+                }
+
+                await _paymentService.UpdatePaymentStatus(payment);
+                return Ok("Payment status updated");
+            }
+            return BadRequest("Missing query string");
+        }
     }
 }
