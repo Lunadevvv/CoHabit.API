@@ -12,6 +12,7 @@ namespace CoHabit.API.Repositories.Interfaces
         Task<List<Payment>> GetAllUserPayment(string userId);
         Task<Payment?> GetLastPayment();
         Task<Payment?> GetPayment(string paymentId);
+        Task<Payment?> GetPaymentByPaymentLinkId(string paymentLinkId);
         void CreatePayment(Payment payment);
         Task<string> GetUserByPaymentId(string paymentId);
         Task UpdatePayment(Payment payment);

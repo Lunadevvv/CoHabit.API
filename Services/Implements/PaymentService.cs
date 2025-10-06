@@ -96,5 +96,10 @@ namespace CoHabit.API.Services.Implements
             }
             return userId;
         }
+
+        public async Task<Payment> GetPaymentByPaymentLinkId(string paymentLinkId)
+        {
+            return await _paymentRepository.GetPaymentByPaymentLinkId(paymentLinkId);
+        }
     }
 }

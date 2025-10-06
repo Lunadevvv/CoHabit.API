@@ -72,5 +72,11 @@ namespace CoHabit.API.Repositories.Implements
         {
             await _context.SaveChangesAsync();
         }
+
+        public async Task<Payment?> GetPaymentByPaymentLinkId(string paymentLinkId)
+        {
+            return await _context.Payments
+                .FirstOrDefaultAsync(p => p.PaymentLinkId == paymentLinkId);
+        }
     }
 }

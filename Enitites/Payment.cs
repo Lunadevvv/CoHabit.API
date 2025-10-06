@@ -10,6 +10,7 @@ namespace CoHabit.API.Enitites
     public class Payment
     {
         public required string PaymentId { get; set; }
+        public required string PaymentLinkId { get; set; }
         public int Price { get; set; } = 0;
         public string Description { get; set; } = string.Empty;
         public PaymentStatus Status { get; set; }

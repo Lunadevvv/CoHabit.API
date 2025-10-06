@@ -19,7 +19,7 @@ namespace CoHabit.API.Controllers
     {
         private readonly IPaymentService _paymentService;
         private readonly IOptions<PayOSConfig> _payosConfig;
-    private readonly IPayOSService _payOSService;
+        private readonly IPayOSService _payOSService;
 
         public WebhookController(IPaymentService paymentService, IOptions<PayOSConfig> payosConfig, IPayOSService payOSService)
         {
@@ -54,17 +54,17 @@ namespace CoHabit.API.Controllers
             }
 
             // Try to extract orderCode or paymentLinkId from data
-            string? paymentId = null;
+            string? paymentLinkId = null;
             if (dataElem.TryGetProperty("paymentLinkId", out var linkIdElem))
             {
-                paymentId = linkIdElem.GetString();
+                paymentLinkId = linkIdElem.GetString();
             }
-            else if (dataElem.TryGetProperty("orderCode", out var orderCodeElem))
-            {
-                // orderCode is an integer - we'll use its string representation to match our paymentId if used
-                paymentId = orderCodeElem.GetRawText();
-            }
-            if (string.IsNullOrEmpty(paymentId)) return BadRequest("Missing payment identifier in data");
+            // else if (dataElem.TryGetProperty("orderCode", out var orderCodeElem))
+            // {
+            //     // orderCode is an integer - we'll use its string representation to match our paymentId if used
+            //     paymentId = orderCodeElem.GetRawText();
+            // }
+            if (string.IsNullOrEmpty(paymentLinkId)) return BadRequest("Missing payment identifier in data");
 
             PaymentStatus newStatus = PaymentStatus.InProgress;
             if (dataElem.TryGetProperty("status", out var statusElem))
@@ -79,7 +79,7 @@ namespace CoHabit.API.Controllers
                 }
             }
 
-            var payment = await _paymentService.GetPayment(paymentId);
+            var payment = await _paymentService.GetPaymentByPaymentLinkId(paymentLinkId);
             if (payment == null) return NotFound();
             payment.Status = newStatus;
             await _paymentService.UpdatePaymentStatus(payment);

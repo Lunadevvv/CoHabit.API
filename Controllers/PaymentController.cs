@@ -19,6 +19,7 @@ using Net.payOS.Types;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using CoHabit.API.DTOs.Responses;
 
 namespace CoHabit.API.Controllers
 {
@@ -28,11 +29,15 @@ namespace CoHabit.API.Controllers
     {
         private readonly ILogger<PaymentController> _logger;
         private readonly IPaymentService _paymentService;
-        private readonly IPayOSService _payOSService;
+    private readonly IOptions<PayOSConfig> _payOSConfig;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly Services.Interfaces.IPayOSService _payOSService;
 
-        public PaymentController(ILogger<PaymentController> logger, IPaymentService paymentService, IPayOSService payOSService)
+        public PaymentController(ILogger<PaymentController> logger, IPaymentService paymentService, IOptions<PayOSConfig> payOSConfig, IHttpClientFactory httpClientFactory, Services.Interfaces.IPayOSService payOSService)
         {
+            _payOSConfig = payOSConfig;
             _paymentService = paymentService;
+            _httpClientFactory = httpClientFactory;
             _payOSService = payOSService;
             _logger = logger;
         }
@@ -79,9 +84,14 @@ namespace CoHabit.API.Controllers
 
             var paymentId = _paymentService.GeneratePaymentId();
 
+            // Use PayOSService to create payment link
+            var orderCode = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var createPaymentLinkResponse = await _payOSService.CreatePaymentLinkAsync(request, orderCode);
+
             var payment = new Payment
             {
                 PaymentId = paymentId,
+                PaymentLinkId = createPaymentLinkResponse.PaymentLinkId ?? string.Empty,
                 Price = request.Amount,
                 Description = request.Description,
                 Status = PaymentStatus.InProgress,
@@ -92,14 +102,10 @@ namespace CoHabit.API.Controllers
 
             await _paymentService.CreatePayment(payment, userIdStr);
 
-            // Use PayOSService to create payment link
-            var orderCode = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            var checkoutUrl = await _payOSService.CreatePaymentLinkAsync(request, orderCode);
-
-            return Ok(new CoHabit.API.DTOs.Responses.CreatePaymentResponse
+            return Ok(new CreatePaymentResponse
             {
                 PaymentId = paymentId,
-                CheckoutUrl = checkoutUrl ?? string.Empty
+                CheckoutUrl = createPaymentLinkResponse.CheckoutUrl ?? string.Empty
             });
         }
 

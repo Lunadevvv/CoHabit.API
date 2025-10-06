@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using CoHabit.API.DTOs.Requests;
+using CoHabit.API.DTOs.Responses;
 using CoHabit.API.Helpers;
 using CoHabit.API.Services.Interfaces;
 using Microsoft.Extensions.Options;
@@ -15,14 +16,17 @@ namespace CoHabit.API.Services.Implements
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly PayOSConfig _config;
+        private readonly ILogger<PayOSService> _logger;
 
-        public PayOSService(IHttpClientFactory httpClientFactory, IOptions<PayOSConfig> options)
+
+        public PayOSService(IHttpClientFactory httpClientFactory, IOptions<PayOSConfig> options, ILogger<PayOSService> logger)
         {
             _httpClientFactory = httpClientFactory;
             _config = options.Value;
+            _logger = logger;
         }
 
-        public async Task<string?> CreatePaymentLinkAsync(CreatePaymentRequest request, int orderCode)
+        public async Task<CreatePaymentLinkResponse> CreatePaymentLinkAsync(CreatePaymentRequest request, int orderCode)
         {
             var client = _httpClientFactory.CreateClient("payos");
 
@@ -38,7 +42,7 @@ namespace CoHabit.API.Services.Implements
                 returnUrl = request.ReturnUrl,
                 signature = signature
             };
-
+            
             var json = JsonSerializer.Serialize(payload);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             if (!string.IsNullOrEmpty(_config.ClientId)) content.Headers.Add("x-client-id", _config.ClientId);
@@ -52,22 +56,37 @@ namespace CoHabit.API.Services.Implements
             {
                 using var doc = JsonDocument.Parse(body);
                 var root = doc.RootElement;
-                if (root.TryGetProperty("data", out var data) && data.TryGetProperty("checkoutUrl", out var urlElem))
+                if (root.TryGetProperty("data", out var data) && data.TryGetProperty("checkoutUrl", out var urlElem) && data.TryGetProperty("paymentLinkId", out var paymentLinkIdElem))
                 {
-                    return urlElem.GetString();
+                    return new CreatePaymentLinkResponse
+                    {
+                        PaymentLinkId = paymentLinkIdElem.GetString(),
+                        CheckoutUrl = urlElem.GetString()
+                    };
                 }
             }
             catch { /* swallow */ }
 
-            return null;
+            return new CreatePaymentLinkResponse();
         }
 
         public bool VerifyWebhookSignature(string dataJson, string signature)
         {
-            if (string.IsNullOrEmpty(_config.ChecksumKey)) return true;
-            if (string.IsNullOrEmpty(signature)) return false;
+            if (string.IsNullOrEmpty(_config.ChecksumKey))
+            {
+                _logger.LogWarning("PayOS checksum key is not configured, cannot verify webhook signature");
+                return false;
+            }
+            if (string.IsNullOrEmpty(signature))
+            {
+                _logger.LogWarning("PayOS webhook signature is empty");
+                return false;
+            }
+            _logger.LogInformation("Webhook DataJson: {DataJson}", dataJson);
+            _logger.LogInformation("Webhook Signature: {Signature}", signature);
             var computed = ComputeHmacSha256(_config.ChecksumKey, dataJson);
-            return string.Equals(computed, signature, StringComparison.OrdinalIgnoreCase);
+            _logger.LogInformation("Computed Signature: {Computed}", computed);
+            return computed.Equals(signature.ToLowerInvariant());
         }
 
         private static string ComputeHmacSha256(string key, string data)
