@@ -20,6 +20,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using CoHabit.API.DTOs.Responses;
+using CoHabit.API.Services.Implements;
 
 namespace CoHabit.API.Controllers
 {
@@ -32,14 +33,16 @@ namespace CoHabit.API.Controllers
         private readonly IOptions<PayOSConfig> _payOSConfig;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IPayOSService _payOSService;
+        private readonly IAuthService _authService;
 
-        public PaymentController(ILogger<PaymentController> logger, IPaymentService paymentService, IOptions<PayOSConfig> payOSConfig, IHttpClientFactory httpClientFactory, IPayOSService payOSService)
+        public PaymentController(ILogger<PaymentController> logger, IPaymentService paymentService, IOptions<PayOSConfig> payOSConfig, IHttpClientFactory httpClientFactory, IPayOSService payOSService, AuthService authService)
         {
             _payOSConfig = payOSConfig;
             _paymentService = paymentService;
             _httpClientFactory = httpClientFactory;
             _payOSService = payOSService;
             _logger = logger;
+            _authService = authService;
         }
 
         [HttpGet("all")]
@@ -110,24 +113,36 @@ namespace CoHabit.API.Controllers
         }
 
         [HttpPatch("update-status")]
+        [Authorize]
         public async Task<IActionResult> UpdatePaymentStatus()
         {
             if (Request.QueryString.HasValue)
             {
+                //Get current user id from token
+                var userId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
+                    ? parsedUserId
+                    : throw new Exception("Invalid user ID");
+
+                //Get payment info from query string
                 var paymentResult = _payOSService.GetPaymentInfo(Request.Query);
                 if (paymentResult == null || string.IsNullOrEmpty(paymentResult.PaymentLinkId))
                 {
                     return BadRequest("Invalid payment information");
                 }
+
+                //Find payment by paymentLinkId
                 var payment = await _paymentService.GetPaymentByPaymentLinkId(paymentResult.PaymentLinkId);
                 if (payment == null)
                 {
                     return NotFound("Payment not found");
                 }
+                
                 // Update payment status based on the status from query
                 if (paymentResult.Status == "PAID")
                 {
                     payment.Status = PaymentStatus.Success;
+                    // Update user's role
+                    await _authService.AssignRoleAsync(userId, payment.Description);
                 }
                 else if (paymentResult.Status == "CANCELLED")
                 {
