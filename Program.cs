@@ -116,7 +116,13 @@ namespace CoHabit.API
                 options.AddPolicy("AllowFrontend",
                     policy =>
                     {
-                        policy.WithOrigins("http://localhost:3000")
+                        policy.WithOrigins(
+                            "https://cohabit-dun.vercel.app",
+                            "https://cohabit-d134fu1op-huyld1504s-projects.vercel.app",
+                            "https://cohabit-git-main-huyld1504s-projects.vercel.app",
+                            "http://localhost:5173",
+                            "https://localhost:5173"
+                        )
                             .AllowAnyHeader()
                             .AllowAnyMethod()
                             .AllowCredentials(); // QUAN TRỌNG: Cho phép cookies
