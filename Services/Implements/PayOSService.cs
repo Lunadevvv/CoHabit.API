@@ -52,7 +52,7 @@ namespace CoHabit.API.Services.Implements
 
             var res = await client.PostAsync("v2/payment-requests", content);
             var body = await res.Content.ReadAsStringAsync();
-            if (!res.IsSuccessStatusCode) return null;
+            if (!res.IsSuccessStatusCode) return new CreatePaymentLinkResponse();
 
             try
             {
@@ -67,7 +67,9 @@ namespace CoHabit.API.Services.Implements
                     };
                 }
             }
-            catch { /* swallow */ }
+            catch { 
+                return new CreatePaymentLinkResponse();
+            }
 
             return new CreatePaymentLinkResponse();
         }
