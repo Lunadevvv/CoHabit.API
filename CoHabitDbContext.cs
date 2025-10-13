@@ -13,6 +13,10 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
     public DbSet<User> Users { get; set; }
     public DbSet<Characteristic> Characteristics { get; set; }
     public DbSet<Otp> Otps { get; set; }
+    public DbSet<Payment> Payments { get; set; }
+    public DbSet<Furniture> Furnitures { get; set; }
+    public DbSet<Post> Posts { get; set; }
+    public DbSet<Order> Orders { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
 
@@ -25,10 +29,10 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
             entity.HasKey(e => e.Id);
             entity.Property(u => u.FirstName).HasMaxLength(10);
             entity.Property(u => u.LastName).HasMaxLength(10);
-            entity.Property(u => u.Phone).HasMaxLength(10);
+            entity.Property(u => u.PhoneNumber).HasMaxLength(10);
             entity.Property(u => u.Image).HasMaxLength(2048);
             entity.HasIndex(e => e.Id, "UQ__User__1788CC4DF7FFBA69").IsUnique();
-            entity.HasIndex(e => e.Phone, "UQ__User__536C85E43394AC26").IsUnique();
+            entity.HasIndex(e => e.PhoneNumber, "UQ__User__536C85E43394AC26").IsUnique();
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
 
             entity.HasMany(u => u.Characteristics)
@@ -52,6 +56,28 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
                         j.HasKey("UserId", "CharId");
                         j.ToTable("UserCharacteristics");
                     });
+
+            entity.HasMany(u => u.FavoritePosts)
+                    .WithMany(p => p.LikedByUsers)
+                    .UsingEntity<Dictionary<string, object>>(
+                    "UserFavoritePost",
+                    j => j
+                        .HasOne<Post>()
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .HasConstraintName("FK_UserFavoritePost_Post_PostId")
+                        .OnDelete(DeleteBehavior.NoAction),
+                    j => j
+                        .HasOne<User>()
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .HasConstraintName("FK_UserFavoritePost_User_UserId")
+                        .OnDelete(DeleteBehavior.NoAction),
+                    j =>
+                    {
+                        j.HasKey("UserId", "PostId");
+                        j.ToTable("UserFavoritePosts");
+                    });
         });
 
         builder.Entity<Characteristic>(entity =>
@@ -69,7 +95,7 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
             entity.Property(e => e.Phone).HasMaxLength(10);
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.ExpiredAt).HasColumnType("datetime");
-            entity.HasIndex(e => new { e.Phone, e.CodeHashed }, "UQ__Otp__C8EE201F536C85E4").IsUnique();
+            entity.HasIndex(e => e.Phone, "UQ__Otp__C8EE201F536C85E4").IsUnique();
         });
 
         //Seed data mặc định vào bảng asp.net role
@@ -109,7 +135,97 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
                     Name = "BasicMember",
                     NormalizedName = "BASICMEMBER"
                 }
-
             });
+
+        builder.Entity<Payment>(entity =>
+        {
+            entity.HasKey(e => e.PaymentId);
+            entity.Property(e => e.PaymentId).HasMaxLength(26);
+            entity.Property(e => e.PaymentLinkId).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Price).IsRequired();
+            entity.Property(e => e.Status).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime").IsRequired();
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime").IsRequired();
+            entity.Property(e => e.UserId).HasMaxLength(40).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(20);
+            entity.HasIndex(e => e.PaymentLinkId, "IX_Payment_PaymentLinkId");
+            
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.Payments)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Furniture>(entity =>
+        {
+            entity.HasKey(e => e.FurId);
+            entity.Property(e => e.FurId).HasMaxLength(6);
+            entity.Property(e => e.Name).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime").IsRequired();
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime").IsRequired();
+            entity.HasIndex(e => e.FurId, "UQ__Furnitu__1788CC4D8C1E3A2E").IsUnique();
+        });
+
+        builder.Entity<Post>(entity =>
+        {
+            entity.HasKey(e => e.PostId);
+            entity.Property(e => e.Title).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Address).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.Price).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.Condition).HasMaxLength(1000);
+            entity.Property(e => e.DepositPolicy).HasMaxLength(1000);
+            entity.Property(e => e.Status).IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime").IsRequired();
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime").IsRequired();
+            entity.Property(e => e.UserId).IsRequired();
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.Posts)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(p => p.Furnitures)
+                    .WithMany(f => f.Posts)
+                    .UsingEntity<Dictionary<string, object>>(
+                    "PostFurniture",
+                    j => j
+                        .HasOne<Furniture>()
+                        .WithMany()
+                        .HasForeignKey("FurId")
+                        .HasConstraintName("FK_PostFurniture_Furniture_FurId")
+                        .OnDelete(DeleteBehavior.Cascade),
+                    j => j
+                        .HasOne<Post>()
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .HasConstraintName("FK_PostFurniture_Post_PostId")
+                        .OnDelete(DeleteBehavior.Cascade),
+                    j =>
+                    {
+                        j.HasKey("PostId", "FurId");
+                        j.ToTable("PostFurnitures");
+                    });
+        });
+
+        builder.Entity<Order>(entity =>
+        {
+            entity.HasKey(e => e.OrderId);
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime").IsRequired();
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.PostId).IsRequired();
+            entity.Property(e => e.OwnerId).IsRequired();
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.Orders)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(e => e.Post)
+                .WithMany(p => p.Orders)
+                .HasForeignKey(e => e.PostId)
+                .OnDelete(DeleteBehavior.NoAction);
+        });
     }
 }

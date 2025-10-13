@@ -7,8 +7,8 @@ namespace CoHabit.API.Services.Interfaces
 {
     public interface IOtpService
     {
-        Task<string> GenerateAndSendOtpAsync(string phoneNumber);
-        Task<bool> VerifyOtpAsync(string phoneNumber, string code);
+        Task GenerateAndSendOtpAsync(string phoneNumber, string email);
+        Task<bool> VerifyOtpAsync(string phoneNumber, string email, string code);
         Task CleanupExpiredOtpsAsync();
     }
 }

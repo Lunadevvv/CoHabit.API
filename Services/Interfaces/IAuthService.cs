@@ -14,5 +14,7 @@ namespace CoHabit.API.Services.Interfaces
         Task<LoginResponse> RefreshJwtTokenAsync(RefreshTokenRequest request);
         Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request);
         Task ForgotPasswordAsync(ForgotPasswordRequest request);
+        Task RevokeTokenAsync(Guid userId);
+        Task AssignRoleAsync(Guid userId, string role);
     }
 }

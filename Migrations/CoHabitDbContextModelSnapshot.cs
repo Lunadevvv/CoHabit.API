@@ -47,6 +47,61 @@ namespace CoHabit.API.Migrations
                     b.ToTable("Characteristics");
                 });
 
+            modelBuilder.Entity("CoHabit.API.Enitites.Furniture", b =>
+                {
+                    b.Property<string>("FurId")
+                        .HasMaxLength(6)
+                        .HasColumnType("nvarchar(6)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime");
+
+                    b.HasKey("FurId");
+
+                    b.HasIndex(new[] { "FurId" }, "UQ__Furnitu__1788CC4D8C1E3A2E")
+                        .IsUnique();
+
+                    b.ToTable("Furnitures");
+                });
+
+            modelBuilder.Entity("CoHabit.API.Enitites.Order", b =>
+                {
+                    b.Property<Guid>("OrderId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("OrderId");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Orders");
+                });
+
             modelBuilder.Entity("CoHabit.API.Enitites.Otp", b =>
                 {
                     b.Property<Guid>("OtpId")
@@ -55,10 +110,14 @@ namespace CoHabit.API.Migrations
 
                     b.Property<string>("CodeHashed")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("ExpiredAt")
                         .HasColumnType("datetime");
@@ -77,10 +136,102 @@ namespace CoHabit.API.Migrations
 
                     b.HasKey("OtpId");
 
-                    b.HasIndex(new[] { "Phone", "CodeHashed" }, "UQ__Otp__C8EE201F536C85E4")
+                    b.HasIndex(new[] { "Phone" }, "UQ__Otp__C8EE201F536C85E4")
                         .IsUnique();
 
                     b.ToTable("Otps");
+                });
+
+            modelBuilder.Entity("CoHabit.API.Enitites.Payment", b =>
+                {
+                    b.Property<string>("PaymentId")
+                        .HasMaxLength(26)
+                        .HasColumnType("nvarchar(26)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("PaymentLinkId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("Price")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasMaxLength(20)
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<Guid>("UserId")
+                        .HasMaxLength(40)
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("PaymentId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex(new[] { "PaymentLinkId" }, "IX_Payment_PaymentLinkId");
+
+                    b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("CoHabit.API.Enitites.Post", b =>
+                {
+                    b.Property<Guid>("PostId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Condition")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("DepositPolicy")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("Price")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("PostId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Posts");
                 });
 
             modelBuilder.Entity("CoHabit.API.Enitites.User", b =>
@@ -141,19 +292,14 @@ namespace CoHabit.API.Migrations
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Phone")
-                        .IsRequired()
+                    b.Property<string>("PhoneNumber")
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
                     b.Property<string>("RefreshToken")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("RefreshTokenExpiryTime")
@@ -189,8 +335,9 @@ namespace CoHabit.API.Migrations
                     b.HasIndex(new[] { "Id" }, "UQ__User__1788CC4DF7FFBA69")
                         .IsUnique();
 
-                    b.HasIndex(new[] { "Phone" }, "UQ__User__536C85E43394AC26")
-                        .IsUnique();
+                    b.HasIndex(new[] { "PhoneNumber" }, "UQ__User__536C85E43394AC26")
+                        .IsUnique()
+                        .HasFilter("[PhoneNumber] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -225,31 +372,31 @@ namespace CoHabit.API.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("43ddb33f-a6f6-4153-b7ea-9755467b44ef"),
+                            Id = new Guid("9448c7d6-93ff-4bbf-9352-636bb411889a"),
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = new Guid("02de5e89-a336-4c7a-93d1-4de56e24c233"),
+                            Id = new Guid("a412f71d-40c7-4bbc-b267-1b01e4fe5f4c"),
                             Name = "Moderator",
                             NormalizedName = "MODERATOR"
                         },
                         new
                         {
-                            Id = new Guid("f5f774b4-bdd2-4c79-8d9d-3159ed023a0c"),
+                            Id = new Guid("33a2f609-396a-4fa0-aaf6-8b2256767496"),
                             Name = "ProMember",
                             NormalizedName = "PROMEMBER"
                         },
                         new
                         {
-                            Id = new Guid("0c956220-0e7e-40cd-ab22-0f68fa77e6f7"),
+                            Id = new Guid("b0887849-c0f1-472e-8cb8-c8c9ee758e5a"),
                             Name = "PlusMember",
                             NormalizedName = "PLUSMEMBER"
                         },
                         new
                         {
-                            Id = new Guid("c832d41e-f65c-46a5-900f-165791a14296"),
+                            Id = new Guid("a462a7d5-f20b-4e23-92b8-f65866a8a2cc"),
                             Name = "BasicMember",
                             NormalizedName = "BASICMEMBER"
                         });
@@ -358,6 +505,21 @@ namespace CoHabit.API.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("PostFurniture", b =>
+                {
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FurId")
+                        .HasColumnType("nvarchar(6)");
+
+                    b.HasKey("PostId", "FurId");
+
+                    b.HasIndex("FurId");
+
+                    b.ToTable("PostFurnitures", (string)null);
+                });
+
             modelBuilder.Entity("UserCharacteristic", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -371,6 +533,62 @@ namespace CoHabit.API.Migrations
                     b.HasIndex("CharId");
 
                     b.ToTable("UserCharacteristics", (string)null);
+                });
+
+            modelBuilder.Entity("UserFavoritePost", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("UserId", "PostId");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("UserFavoritePosts", (string)null);
+                });
+
+            modelBuilder.Entity("CoHabit.API.Enitites.Order", b =>
+                {
+                    b.HasOne("CoHabit.API.Enitites.Post", "Post")
+                        .WithMany("Orders")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("CoHabit.API.Enitites.User", "User")
+                        .WithMany("Orders")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CoHabit.API.Enitites.Payment", b =>
+                {
+                    b.HasOne("CoHabit.API.Enitites.User", "User")
+                        .WithMany("Payments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CoHabit.API.Enitites.Post", b =>
+                {
+                    b.HasOne("CoHabit.API.Enitites.User", "User")
+                        .WithMany("Posts")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -424,6 +642,23 @@ namespace CoHabit.API.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PostFurniture", b =>
+                {
+                    b.HasOne("CoHabit.API.Enitites.Furniture", null)
+                        .WithMany()
+                        .HasForeignKey("FurId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_PostFurniture_Furniture_FurId");
+
+                    b.HasOne("CoHabit.API.Enitites.Post", null)
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_PostFurniture_Post_PostId");
+                });
+
             modelBuilder.Entity("UserCharacteristic", b =>
                 {
                     b.HasOne("CoHabit.API.Enitites.Characteristic", null)
@@ -439,6 +674,37 @@ namespace CoHabit.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_UserCharacteristic_User_UserId");
+                });
+
+            modelBuilder.Entity("UserFavoritePost", b =>
+                {
+                    b.HasOne("CoHabit.API.Enitites.Post", null)
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired()
+                        .HasConstraintName("FK_UserFavoritePost_Post_PostId");
+
+                    b.HasOne("CoHabit.API.Enitites.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired()
+                        .HasConstraintName("FK_UserFavoritePost_User_UserId");
+                });
+
+            modelBuilder.Entity("CoHabit.API.Enitites.Post", b =>
+                {
+                    b.Navigation("Orders");
+                });
+
+            modelBuilder.Entity("CoHabit.API.Enitites.User", b =>
+                {
+                    b.Navigation("Orders");
+
+                    b.Navigation("Payments");
+
+                    b.Navigation("Posts");
                 });
 #pragma warning restore 612, 618
         }

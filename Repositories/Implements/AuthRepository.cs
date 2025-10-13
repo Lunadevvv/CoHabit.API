@@ -18,18 +18,43 @@ namespace CoHabit.API.Repositories.Implements
             _context = context;
         }
 
+        public async Task AddFavoritePostAsync(User user, Post post)
+        {
+            user.FavoritePosts.Add(post);
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RemoveFavoritePostAsync(User user, Post post)
+        {
+            user.FavoritePosts.Remove(post);
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<Post>> GetFavoritePostsByUserIdAsync(Guid userId)
+        {
+            var user = await _context.Users
+                .Where(u => u.Id == userId)
+                .Include(u => u.FavoritePosts)
+                .FirstOrDefaultAsync();
+
+            return user?.FavoritePosts?.ToList() ?? new List<Post>();
+        }
+
         public async Task<User?> GetUserByIdAsync(Guid userId)
         {
             return await _context.Users
                 .Where(u => u.Id == userId && !u.IsRevoked)
                 .Include(u => u.Characteristics)
+                .Include(u => u.FavoritePosts)
                 .FirstOrDefaultAsync();
         }
 
         public async Task<User?> GetUserByPhoneAsync(string phone)
         {
             return await _context.Users
-                .Where(u => u.Phone == phone && !u.IsRevoked)
+                .Where(u => u.PhoneNumber == phone)
                 .FirstOrDefaultAsync();
         }
 

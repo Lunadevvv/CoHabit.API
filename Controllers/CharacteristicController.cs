@@ -6,12 +6,14 @@ using CoHabit.API.DTOs.Requests;
 using CoHabit.API.DTOs.Responses;
 using CoHabit.API.Helpers;
 using CoHabit.API.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CoHabit.API.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
+    [Authorize]
     public class CharacteristicController : ControllerBase
     {
         private readonly ICharacteristicService _characteristicService;
@@ -42,6 +44,7 @@ namespace CoHabit.API.Controllers
 
         // POST: api/v1/Characteristic
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Create([FromQuery] string title)
         {
             await _characteristicService.AddCharacteristicAsync(title);
@@ -51,6 +54,7 @@ namespace CoHabit.API.Controllers
 
         // PUT: api/v1/Characteristic
         [HttpPut]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Update([FromBody] CharacteristicRequest request)
         {
             try
@@ -66,6 +70,7 @@ namespace CoHabit.API.Controllers
 
         // DELETE: api/v1/Characteristic/{id}
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Delete(string id)
         {
             try

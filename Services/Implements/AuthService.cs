@@ -15,12 +15,40 @@ namespace CoHabit.API.Services.Implements
     {
         private readonly IJwtService _jwtService;
         private readonly UserManager<User> _userManager;
+        private readonly RoleManager<IdentityRole<Guid>> _roleManager;
         private readonly IAuthRepository _authRepository;
-        public AuthService(IJwtService jwtService, UserManager<User> userManager, IAuthRepository authRepository)
+        public AuthService(IJwtService jwtService, UserManager<User> userManager, IAuthRepository authRepository, RoleManager<IdentityRole<Guid>> roleManager)
         {
+            _roleManager = roleManager;
             _authRepository = authRepository;
             _userManager = userManager;
             _jwtService = jwtService;
+        }
+
+        public async Task AssignRoleAsync(Guid userId, string role)
+        {
+            var user = await _authRepository.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+            if (!await _roleManager.RoleExistsAsync(role))
+            {
+                throw new Exception("Role does not exist");
+            }
+            var currentRoles = await _userManager.GetRolesAsync(user);
+            var result = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new Exception($"Failed to remove user roles: {errors}");
+            }
+            result = await _userManager.AddToRoleAsync(user, role);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new Exception($"Failed to assign role: {errors}");
+            }
         }
 
         public async Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request)
@@ -69,6 +97,10 @@ namespace CoHabit.API.Services.Implements
             if (user == null || !await _userManager.CheckPasswordAsync(user, loginRequest.Password))
             {
                 throw new UnauthorizedAccessException("Invalid phone number or password.");
+            }
+            if (user.IsRevoked)
+            {
+                throw new UnauthorizedAccessException("You have been banned!");
             }
             var roles = await _userManager.GetRolesAsync(user);
 
@@ -129,13 +161,28 @@ namespace CoHabit.API.Services.Implements
             {
                 Id = Guid.NewGuid(),
                 UserName = request.Phone,
-                Phone = request.Phone,
+                PhoneNumber = request.Phone,
+                Email = request.Email,
+                EmailConfirmed = true,
                 CreatedAt = DateTime.UtcNow,
                 IsRevoked = false
             };
             user.PasswordHash = _userManager.PasswordHasher.HashPassword(user, request.Password); //hash password trước khi lưu vào bảng AspNetUsers
             await _userManager.CreateAsync(user);
             await _userManager.AddToRoleAsync(user, "BasicMember");
+        }
+
+        public async Task RevokeTokenAsync(Guid userId)
+        {
+            var user = await _authRepository.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = null;
+            user.IsRevoked = true;
+            await _userManager.UpdateAsync(user);
         }
     }
 }

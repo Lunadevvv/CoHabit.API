@@ -9,6 +9,7 @@ namespace CoHabit.API.Enitites
     {
         public Guid OtpId { get; set; }
         public required string Phone { get; set; }
+        public required string Email { get; set; }
         public required string CodeHashed { get; set; }
         public required byte[] Salt { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

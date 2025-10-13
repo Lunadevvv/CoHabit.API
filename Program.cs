@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Net.payOS;
+using CoHabit.API.Helpers;
 
 namespace CoHabit.API
 {
@@ -102,7 +104,7 @@ namespace CoHabit.API
                         OnMessageReceived = context =>
                         {
                             // Lấy token từ cookie thay vì header
-                            context.Token = context.Request.Cookies["access_token"];
+                            context.Token = context.Request.Cookies["AccessToken"];
                             return Task.CompletedTask;
                         }
                     };
@@ -114,7 +116,7 @@ namespace CoHabit.API
                 options.AddPolicy("AllowFrontend",
                     policy =>
                     {
-                        policy.WithOrigins("http://localhost:5199")
+                        policy.WithOrigins("http://localhost:3000")
                             .AllowAnyHeader()
                             .AllowAnyMethod()
                             .AllowCredentials(); // QUAN TRỌNG: Cho phép cookies
@@ -129,6 +131,32 @@ namespace CoHabit.API
             builder.Services.AddScoped<ICharacteristicService, CharacteristicService>();
             builder.Services.AddScoped<IProfileService, ProfileService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
+            builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+            builder.Services.AddScoped<IPaymentService, PaymentService>();
+            builder.Services.AddScoped<IFurnitureRepository, FurnitureRepository>();
+            builder.Services.AddScoped<IFurnitureService, FurnitureService>();
+            builder.Services.AddScoped<IPostRepository, PostRepository>();
+            builder.Services.AddScoped<IPostService, PostService>();
+            builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+            builder.Services.AddScoped<IOrderService, OrderService>();
+
+            // PayOS configuration and HttpClient
+            builder.Services.Configure<PayOSConfig>(builder.Configuration.GetSection("PayOS"));
+            builder.Services.AddHttpClient("payos", client =>
+            {
+                client.BaseAddress = new Uri(builder.Configuration["PayOS:BaseUrl"] ?? "https://api-merchant.payos.vn/");
+                client.Timeout = TimeSpan.FromSeconds(30);
+            });
+
+            // Brevo configuration and HttpClient
+            builder.Services.Configure<BrevoConfig>(builder.Configuration.GetSection("Brevo"));
+            builder.Services.AddHttpClient("brevo", client =>
+            {
+                client.BaseAddress = new Uri(builder.Configuration["Brevo:BaseUrl"] ?? "https://api.brevo.com/v3/");
+                client.Timeout = TimeSpan.FromSeconds(30);
+            });
+
+            builder.Services.AddScoped<IPayOSService, PayOSService>();
 
             var app = builder.Build();
 
