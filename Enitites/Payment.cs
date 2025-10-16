@@ -19,5 +19,6 @@ namespace CoHabit.API.Enitites
         public Guid UserId { get; set; }
         [JsonIgnore]
         public virtual User User { get; set; }
+        public int SubcriptionId { get; set; }
     }
 }

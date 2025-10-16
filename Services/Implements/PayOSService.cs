@@ -32,7 +32,7 @@ namespace CoHabit.API.Services.Implements
         {
             var client = _httpClientFactory.CreateClient("payos");
 
-            var signatureData = $"amount={request.Amount}&cancelUrl={request.CancelUrl}&description={request.Description}&orderCode={orderCode}&returnUrl={request.ReturnUrl}";
+            var signatureData = $"amount={request.Amount}&cancelUrl={_config.CancelUrl}&description={request.Description}&orderCode={orderCode}&returnUrl={_config.ReturnUrl}";
             var signature = ComputeHmacSha256(_config.ChecksumKey ?? string.Empty, signatureData);
 
             var payload = new
@@ -40,8 +40,8 @@ namespace CoHabit.API.Services.Implements
                 orderCode = orderCode,
                 amount = request.Amount,
                 description = request.Description,
-                cancelUrl = request.CancelUrl,
-                returnUrl = request.ReturnUrl,
+                cancelUrl = _config.CancelUrl,
+                returnUrl = _config.ReturnUrl,
                 signature = signature
             };
             

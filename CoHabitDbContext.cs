@@ -17,6 +17,8 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
     public DbSet<Furniture> Furnitures { get; set; }
     public DbSet<Post> Posts { get; set; }
     public DbSet<Order> Orders { get; set; }
+    public DbSet<Subcription> Subcriptions { get; set; }
+    public DbSet<UserSubcription> UserSubcriptions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
 
@@ -226,6 +228,34 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
                 .WithMany(p => p.Orders)
                 .HasForeignKey(e => e.PostId)
                 .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        builder.Entity<Subcription>(entity =>
+        {
+            entity.HasKey(e => e.SubcriptionId);
+            entity.Property(e => e.SubcriptionId).ValueGeneratedOnAdd();
+            entity.Property(e => e.Name).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Price).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.DurationInDays).IsRequired();
+        });
+
+        builder.Entity<UserSubcription>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.SubcriptionId });
+            entity.Property(e => e.StartDate).HasColumnType("datetime").IsRequired();
+            entity.Property(e => e.EndDate).HasColumnType("datetime").IsRequired();
+            entity.Property(e => e.IsActive).IsRequired();
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.UserSubcriptions)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Subcription)
+                .WithMany(u => u.UserSubcriptions)
+                .HasForeignKey(e => e.SubcriptionId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

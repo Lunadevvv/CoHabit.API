@@ -30,19 +30,19 @@ namespace CoHabit.API.Controllers
     {
         private readonly ILogger<PaymentController> _logger;
         private readonly IPaymentService _paymentService;
-        private readonly IOptions<PayOSConfig> _payOSConfig;
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly IPayOSService _payOSService;
         private readonly IAuthService _authService;
+        private readonly ISubcriptionService _subcriptionService;
+        private readonly IUserSubcriptionService _userSubcriptionService;
 
-        public PaymentController(ILogger<PaymentController> logger, IPaymentService paymentService, IOptions<PayOSConfig> payOSConfig, IHttpClientFactory httpClientFactory, IPayOSService payOSService, AuthService authService)
+        public PaymentController(ILogger<PaymentController> logger, IPaymentService paymentService, IPayOSService payOSService, IAuthService authService, ISubcriptionService subcriptionService, IUserSubcriptionService userSubcriptionService)
         {
-            _payOSConfig = payOSConfig;
             _paymentService = paymentService;
-            _httpClientFactory = httpClientFactory;
             _payOSService = payOSService;
             _logger = logger;
             _authService = authService;
+            _subcriptionService = subcriptionService;
+            _userSubcriptionService = userSubcriptionService;
         }
 
         [HttpGet("all")]
@@ -84,6 +84,17 @@ namespace CoHabit.API.Controllers
             // get current user id from token
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdStr)) return BadRequest("Invalid user");
+            //Parse userId to Guid
+            var userId = Guid.TryParse(userIdStr, out var parsedUserId)
+                    ? parsedUserId
+                    : throw new Exception("Parse user ID failed");
+
+            //Check if subcription exists
+            var userSubcription = await _userSubcriptionService.GetActiveSubcriptionByUserIdAndSubId(userId, request.SubcriptionId);
+            if (userSubcription != null)
+            {
+                return BadRequest("You already have an active subscription.");
+            }
 
             var paymentId = _paymentService.GeneratePaymentId();
 
@@ -100,7 +111,8 @@ namespace CoHabit.API.Controllers
                 Status = PaymentStatus.InProgress,
                 CreatedDate = DateTime.Now,
                 UpdatedDate = DateTime.Now,
-                UserId = Guid.Parse(userIdStr)
+                UserId = userId,
+                SubcriptionId = request.SubcriptionId
             };
 
             await _paymentService.CreatePayment(payment, userIdStr);
@@ -113,16 +125,10 @@ namespace CoHabit.API.Controllers
         }
 
         [HttpPatch("update-status")]
-        [Authorize]
         public async Task<IActionResult> UpdatePaymentStatus()
         {
             if (Request.QueryString.HasValue)
             {
-                //Get current user id from token
-                var userId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
-                    ? parsedUserId
-                    : throw new Exception("Invalid user ID");
-
                 //Get payment info from query string
                 var paymentResult = _payOSService.GetPaymentInfo(Request.Query);
                 if (paymentResult == null || string.IsNullOrEmpty(paymentResult.PaymentLinkId))
@@ -136,13 +142,32 @@ namespace CoHabit.API.Controllers
                 {
                     return NotFound("Payment not found");
                 }
+
+                //Get Subcription from subcriptionId
+                var subcription = await _subcriptionService.GetSubcriptionById(payment.SubcriptionId);
+                if (subcription == null)
+                {
+                    return NotFound("Subcription not found");
+                }
                 
                 // Update payment status based on the status from query
                 if (paymentResult.Status == "PAID")
                 {
                     payment.Status = PaymentStatus.Success;
+
+                    // Create UserSubcription
+                    var userSubcription = new UserSubcription
+                    {
+                        UserId = payment.UserId,
+                        SubcriptionId = subcription.SubcriptionId,
+                        StartDate = DateTime.Now,
+                        EndDate = DateTime.Now.AddDays(subcription.DurationInDays),
+                        IsActive = true
+                    };
+                    await _userSubcriptionService.AddUserSubcription(userSubcription);
+
                     // Update user's role
-                    await _authService.AssignRoleAsync(userId, payment.Description);
+                    await _authService.AssignRoleAsync(payment.UserId, subcription.Name);
                 }
                 else if (paymentResult.Status == "CANCELLED")
                 {

@@ -145,6 +145,10 @@ namespace CoHabit.API
             builder.Services.AddScoped<IPostService, PostService>();
             builder.Services.AddScoped<IOrderRepository, OrderRepository>();
             builder.Services.AddScoped<IOrderService, OrderService>();
+            builder.Services.AddScoped<ISubcriptionRepository, SubcriptionRepository>();
+            builder.Services.AddScoped<ISubcriptionService, SubcriptionService>();
+            builder.Services.AddScoped<IUserSubcriptionRepository, UserSubcriptionRepository>();
+            builder.Services.AddScoped<IUserSubcriptionService, UserSubcriptionService>();
 
             // PayOS configuration and HttpClient
             builder.Services.Configure<PayOSConfig>(builder.Configuration.GetSection("PayOS"));

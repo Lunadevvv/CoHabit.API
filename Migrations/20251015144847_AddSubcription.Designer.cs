@@ -4,6 +4,7 @@ using CoHabit.API;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoHabit.API.Migrations
 {
     [DbContext(typeof(CoHabitDbContext))]
-    partial class CoHabitDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251015144847_AddSubcription")]
+    partial class AddSubcription
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -166,9 +169,6 @@ namespace CoHabit.API.Migrations
 
                     b.Property<int>("Status")
                         .HasMaxLength(20)
-                        .HasColumnType("int");
-
-                    b.Property<int>("SubcriptionId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("UpdatedDate")
@@ -428,31 +428,31 @@ namespace CoHabit.API.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("587767cc-00cf-43e9-a566-0103cad518cf"),
+                            Id = new Guid("4174a15f-5f82-44dc-b4ec-5e106e1df91f"),
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = new Guid("020a1e3e-f047-4d7c-bb02-527b219b68d3"),
+                            Id = new Guid("307aa882-1854-4519-9ddc-fccb6edc0ff3"),
                             Name = "Moderator",
                             NormalizedName = "MODERATOR"
                         },
                         new
                         {
-                            Id = new Guid("ad6ac0c6-9b1d-4802-8769-2e7812a62b69"),
+                            Id = new Guid("9299c795-3a2d-43f7-ba6e-26491cd5b5eb"),
                             Name = "ProMember",
                             NormalizedName = "PROMEMBER"
                         },
                         new
                         {
-                            Id = new Guid("68e50412-b092-4f4b-8f51-5d06594ec0e9"),
+                            Id = new Guid("7e45ebed-2434-4f48-a667-e2d1f7e72079"),
                             Name = "PlusMember",
                             NormalizedName = "PLUSMEMBER"
                         },
                         new
                         {
-                            Id = new Guid("131ec9db-25a5-4e19-b548-b9ec8c973b9d"),
+                            Id = new Guid("7b22f5a0-fbe9-4cfe-b745-e2ded7722b98"),
                             Name = "BasicMember",
                             NormalizedName = "BASICMEMBER"
                         });
