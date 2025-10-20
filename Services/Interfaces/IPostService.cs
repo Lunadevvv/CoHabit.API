@@ -11,11 +11,11 @@ namespace CoHabit.API.Services.Interfaces
 {
     public interface IPostService
     {
-        Task<PaginationResponse<List<Post>>> GetPostsAsync(int CurrentPage, int pageSize);
+        Task<PaginationResponse<List<PostResponse>>> GetPostsAsync(int CurrentPage, int pageSize);
         Task<List<PostResponse>> GetAllPostsAsync();
         Task<List<Post>> GetAllPostsByStatusAsync(PostStatus status);
-        Task<List<Post>> GetAllPostsByUserAsync(Guid userId);
-        Task<List<Post>> GetAllPublishPostsByUserAsync(Guid userId);
+        Task<List<PostResponse>> GetAllPostsByUserAsync(Guid userId);
+        Task<List<PostResponse>> GetAllPublishPostsByUserAsync(Guid userId);
         Task<PostResponse?> GetPostByIdAsync(Guid id);
         Task<int> CreatePostAsync(Guid userId, PostRequest req);
         Task<int> UpdatePostAsync(PostRequest req, Guid postId);

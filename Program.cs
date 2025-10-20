@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using CoHabit.API.Helpers;
+using CloudinaryDotNet;
 
 namespace CoHabit.API
 {
@@ -148,6 +149,8 @@ namespace CoHabit.API
             builder.Services.AddScoped<ISubcriptionService, SubcriptionService>();
             builder.Services.AddScoped<IUserSubcriptionRepository, UserSubcriptionRepository>();
             builder.Services.AddScoped<IUserSubcriptionService, UserSubcriptionService>();
+            builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+            builder.Services.AddScoped<IPayOSService, PayOSService>();
 
             // PayOS configuration and HttpClient
             builder.Services.Configure<PayOSConfig>(builder.Configuration.GetSection("PayOS"));
@@ -167,8 +170,14 @@ namespace CoHabit.API
 
             // Cloudinary configuration
             builder.Services.Configure<CloudinaryConfig>(builder.Configuration.GetSection("Cloudinary"));
+            var cloudinaryAccount = new Account(
+                builder.Configuration["Cloudinary:CloudName"],
+                builder.Configuration["Cloudinary:ApiKey"],
+                builder.Configuration["Cloudinary:ApiSecret"]
+            );
 
-            builder.Services.AddScoped<IPayOSService, PayOSService>();
+            var cloudinary = new Cloudinary(cloudinaryAccount);
+            builder.Services.AddSingleton(cloudinary);
 
             var app = builder.Build();
 

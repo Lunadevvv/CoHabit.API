@@ -42,6 +42,7 @@ namespace CoHabit.API.Services.Implements
                 description = request.Description,
                 cancelUrl = _config.CancelUrl,
                 returnUrl = _config.ReturnUrl,
+                expiredAt = (int)DateTimeOffset.UtcNow.AddMinutes(5).ToUnixTimeSeconds(),
                 signature = signature
             };
             

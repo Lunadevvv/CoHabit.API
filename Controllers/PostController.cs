@@ -27,12 +27,12 @@ namespace CoHabit.API.Controllers
         //API lấy tất cả bài viết với phân trang cho user
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<PaginationResponse<List<Post>>>> GetAllPosts(int currentPage, int pageSize)
+        public async Task<ActionResult<PaginationResponse<List<PostResponse>>>> GetAllPosts(int currentPage, int pageSize)
         {
             try
             {
                 var posts = await _postService.GetPostsAsync(currentPage, pageSize);
-                return Ok(ApiResponse<PaginationResponse<List<Post>>>.SuccessResponse(posts, "Posts retrieved successfully."));
+                return Ok(ApiResponse<PaginationResponse<List<PostResponse>>>.SuccessResponse(posts, "Posts retrieved successfully."));
             }
             catch (Exception ex)
             {
@@ -58,7 +58,7 @@ namespace CoHabit.API.Controllers
         //API lất tất cả bài viết theo userId
         [HttpGet("user/all")]
         [Authorize]
-        public async Task<ActionResult<List<Post>>> GetAllPostsByUser()
+        public async Task<ActionResult<List<PostResponse>>> GetAllPostsByUser()
         {
             try
             {
@@ -66,7 +66,7 @@ namespace CoHabit.API.Controllers
                     ? parsedUserId
                     : throw new Exception("Invalid user ID");
                 var posts = await _postService.GetAllPostsByUserAsync(userId);
-                return Ok(ApiResponse<List<Post>>.SuccessResponse(posts, "User posts retrieved successfully."));
+                return Ok(ApiResponse<List<PostResponse>>.SuccessResponse(posts, "User posts retrieved successfully."));
             }
             catch (Exception ex)
             {
@@ -76,7 +76,7 @@ namespace CoHabit.API.Controllers
         //API lất tất cả bài viết đã được duyệt theo userId
         [HttpGet("user/publish")]
         [Authorize]
-        public async Task<ActionResult<List<Post>>> GetAllPublishPostsByUser()
+        public async Task<ActionResult<List<PostResponse>>> GetAllPublishPostsByUser()
         {
             try
             {
@@ -84,7 +84,7 @@ namespace CoHabit.API.Controllers
                     ? parsedUserId
                     : throw new Exception("Invalid user ID");
                 var posts = await _postService.GetAllPublishPostsByUserAsync(userId);
-                return Ok(ApiResponse<List<Post>>.SuccessResponse(posts, "User posts retrieved successfully."));
+                return Ok(ApiResponse<List<PostResponse>>.SuccessResponse(posts, "User posts retrieved successfully."));
             }
             catch (Exception ex)
             {
@@ -114,10 +114,15 @@ namespace CoHabit.API.Controllers
         //API tạo bài viết
         [HttpPost]
         [Authorize(Roles = "Admin, PlusMember, ProMember, Moderator")]
-        public async Task<ActionResult> CreatePost([FromBody] PostRequest req)
+        public async Task<ActionResult> CreatePost([FromForm] PostRequest req)
         {
             try
             {
+                if (req.Images == null || req.Images.Count > 5)
+                {
+                    return BadRequest(ApiResponse<object>.ErrorResponse("Please upload between 1 to 5 images."));
+                }
+                
                 var userId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
                     ? parsedUserId
                     : throw new Exception("Invalid user ID");
@@ -135,7 +140,7 @@ namespace CoHabit.API.Controllers
         }
         //API chinh sửa bài viết
         [HttpPut("{postId}")]
-        [Authorize(Roles = "Admin, Moderator")]
+        [Authorize(Roles = "Admin, Moderator, PlusMember, ProMember")]
         public async Task<ActionResult> UpdatePost([FromBody] PostRequest req, Guid postId)
         {
             try

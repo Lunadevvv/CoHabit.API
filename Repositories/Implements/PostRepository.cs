@@ -22,6 +22,8 @@ namespace CoHabit.API.Repositories.Implements
         {
             return await _context.Posts
                 .Include(p => p.User)
+                .Include(p => p.PostImages)
+                .AsSplitQuery()
                 .ToListAsync();
         }
 
@@ -29,6 +31,8 @@ namespace CoHabit.API.Repositories.Implements
         {
             return await _context.Posts
                 .Include(p => p.User)
+                .Include(p => p.PostImages)
+                .AsSplitQuery()
                 .Where(p => p.Status == status)
                 .ToListAsync();
         }
@@ -38,12 +42,17 @@ namespace CoHabit.API.Repositories.Implements
             return await _context.Posts
                 .Include(p => p.Furnitures)
                 .Include(p => p.User)
+                .Include(p => p.PostImages)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(p => p.PostId == id);
         }
 
         public async Task<PaginationResponse<List<Post>>> GetPostsAsync(int CurrentPage, int pageSize)
         {
             var items = await _context.Posts
+                .Include(p => p.User)
+                .Include(p => p.PostImages)
+                .AsSplitQuery()
                 .Where(p => p.Status == PostStatus.Publish)
                 .ToListAsync();
 
@@ -65,6 +74,7 @@ namespace CoHabit.API.Repositories.Implements
         public async Task<List<Post>> GetAllPostsByUserAsync(Guid userId)
         {
             return await _context.Posts
+                .Include(p => p.PostImages)
                 .Where(p => p.UserId == userId)
                 .ToListAsync();
         }
@@ -87,6 +97,7 @@ namespace CoHabit.API.Repositories.Implements
         public async Task<Post>? IsPostInFavoritesAsync(Guid userId, Guid postId)
         {
             return await _context.Posts
+                .Include(p => p.PostImages)
                 .Where(p => p.PostId == postId && p.LikedByUsers.Any(u => u.Id == userId))
                 .FirstOrDefaultAsync();
         }

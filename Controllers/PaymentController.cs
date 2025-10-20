@@ -14,8 +14,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Net.payOS;
-using Net.payOS.Types;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
