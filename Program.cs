@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Net.payOS;
 using CoHabit.API.Helpers;
 
 namespace CoHabit.API
@@ -165,6 +164,9 @@ namespace CoHabit.API
                 client.BaseAddress = new Uri(builder.Configuration["Brevo:BaseUrl"] ?? "https://api.brevo.com/v3/");
                 client.Timeout = TimeSpan.FromSeconds(30);
             });
+
+            // Cloudinary configuration
+            builder.Services.Configure<CloudinaryConfig>(builder.Configuration.GetSection("Cloudinary"));
 
             builder.Services.AddScoped<IPayOSService, PayOSService>();
 

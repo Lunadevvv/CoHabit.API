@@ -19,5 +19,6 @@ namespace CoHabit.API.DTOs.Responses
         public PostStatus Status { get; set; }
         public UserResponse? User { get; set; }
         public ICollection<FurnitureResponse>? Furnitures { get; set; }
+        public ICollection<string> ImageUrl { get; set; } = new List<string>();
     }
 }

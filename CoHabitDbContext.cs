@@ -16,6 +16,7 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
     public DbSet<Payment> Payments { get; set; }
     public DbSet<Furniture> Furnitures { get; set; }
     public DbSet<Post> Posts { get; set; }
+    public DbSet<PostImage> PostImages { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<Subcription> Subcriptions { get; set; }
     public DbSet<UserSubcription> UserSubcriptions { get; set; }
@@ -209,6 +210,19 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
                         j.HasKey("PostId", "FurId");
                         j.ToTable("PostFurnitures");
                     });
+            
+        });
+
+        builder.Entity<PostImage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ImageUrl).HasMaxLength(2048).IsRequired();
+            entity.Property(e => e.PostId).IsRequired();
+
+            entity.HasOne(e => e.Post)
+                .WithMany(p => p.PostImages)
+                .HasForeignKey(e => e.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<Order>(entity =>

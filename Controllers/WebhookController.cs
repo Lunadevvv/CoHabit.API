@@ -21,12 +21,18 @@ namespace CoHabit.API.Controllers
         private readonly IOptions<PayOSConfig> _payosConfig;
         private readonly IPayOSService _payOSService;
         private readonly ILogger<WebhookController> _logger;
-        public WebhookController(IPaymentService paymentService, IOptions<PayOSConfig> payosConfig, IPayOSService payOSService, ILogger<WebhookController> logger)
+        private readonly IAuthService _authService;
+        private readonly ISubcriptionService _subcriptionService;
+        private readonly IUserSubcriptionService _userSubcriptionService;
+        public WebhookController(IPaymentService paymentService, IOptions<PayOSConfig> payosConfig, IPayOSService payOSService, ILogger<WebhookController> logger, IAuthService authService, ISubcriptionService subcriptionService, IUserSubcriptionService userSubcriptionService)
         {
             _logger = logger;
             _paymentService = paymentService;
             _payosConfig = payosConfig;
             _payOSService = payOSService;
+            _authService = authService;
+            _subcriptionService = subcriptionService;
+            _userSubcriptionService = userSubcriptionService;
         }
 
         [HttpPost("payos")]
@@ -54,31 +60,82 @@ namespace CoHabit.API.Controllers
                 return Unauthorized();
             }
             _logger.LogInformation("Received valid PayOS webhook: {data}", dataJson);
+
             // Try to extract orderCode or paymentLinkId from data
             string? paymentLinkId = null;
             if (dataElem.TryGetProperty("paymentLinkId", out var linkIdElem))
             {
                 paymentLinkId = linkIdElem.GetString();
-                _logger.LogInformation("Webhook for paymentLinkId: {paymentLinkId}", paymentLinkId);
                 
             }
-            // else if (dataElem.TryGetProperty("orderCode", out var orderCodeElem))
-            // {
-            //     // orderCode is an integer - we'll use its string representation to match our paymentId if used
-            //     paymentId = orderCodeElem.GetRawText();
-            // }
             if (string.IsNullOrEmpty(paymentLinkId)) return BadRequest("Missing payment identifier in data");
+
+            // Find payment by paymentLinkId
+            var payment = await _paymentService.GetPaymentByPaymentLinkId(paymentLinkId);
+            if (payment == null)
+            {
+                _logger.LogWarning("Payment not found for paymentLinkId: {PaymentLinkId}", paymentLinkId);
+                return Ok(); // Return OK to acknowledge webhook
+            }
+
+            //Get Subcription from subcriptionId
+            var subcription = await _subcriptionService.GetSubcriptionById(payment.SubcriptionId);
+            if (subcription == null)
+            {
+                _logger.LogWarning("Subcription not found for subcriptionId: {SubcriptionId}", payment.SubcriptionId);
+                return Ok(); // Return OK to acknowledge webhook
+            }
+
+            // Extract code and desc from webhook data
+            string? code = null;
+            string? desc = null;
+            
+            if (dataElem.TryGetProperty("code", out var codeElem))
+            {
+                code = codeElem.GetString();
+            }
+            if (dataElem.TryGetProperty("desc", out var descElem))
+            {
+                desc = descElem.GetString();
+            }
+
+            _logger.LogInformation("Processing payment {PaymentId} with code: {Code}, desc: {Desc}", 
+                payment.PaymentId, code, desc);
+
+            // Update payment status based on code
+            // code = "00" means success
+            if (code == "00")
+            {
+                payment.Status = PaymentStatus.Success;
+                payment.UpdatedDate = DateTime.Now;
+                
+                // Create user subscription
+                var userSubscription = new UserSubcription
+                {
+                    UserId = payment.UserId,
+                    SubcriptionId = payment.SubcriptionId,
+                    StartDate = DateTime.Now,
+                    EndDate = DateTime.Now.AddDays(subcription.DurationInDays),
+                    IsActive = true
+                };
+
+                await _userSubcriptionService.AddUserSubcription(userSubscription);
+                // Update user's role
+                await _authService.AssignRoleAsync(payment.UserId, subcription.Name);
+                _logger.LogInformation("Payment {PaymentId} marked as Success and subscription created", payment.PaymentId);
+            }
+            else
+            {
+                // Any other code means failed
+                payment.Status = PaymentStatus.Failed;
+                payment.UpdatedDate = DateTime.Now;
+                _logger.LogWarning("Payment {PaymentId} marked as Failed with code: {Code}, desc: {Desc}", 
+                    payment.PaymentId, code, desc);
+            }
+
+            await _paymentService.UpdatePaymentStatus(payment);
+            
             return Ok();
         }
-
-        // private static bool ValidateHmacSha256(string key, string data, string? signatureHeader)
-        // {
-        //     if (string.IsNullOrEmpty(key)) return true; // can't validate
-        //     if (string.IsNullOrEmpty(signatureHeader)) return false;
-        //     using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key));
-        //     var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(data));
-        //     var computed = BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant();
-        //     return computed == signatureHeader.ToLowerInvariant();
-        // }
     }
 }

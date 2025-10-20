@@ -156,15 +156,15 @@ namespace CoHabit.API.Services.Implements
             return BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant();
         }
 
-        public ReturnURLQueryResponse GetPaymentInfo(IQueryCollection query)
-        {
-            var res =
-                new ReturnURLQueryResponse
-                {
-                    PaymentLinkId = query["id"],
-                    Status = query["status"]
-                };
-            return res;
-        }
+        // public ReturnURLQueryResponse GetPaymentInfo(IQueryCollection query)
+        // {
+        //     var res =
+        //         new ReturnURLQueryResponse
+        //         {
+        //             PaymentLinkId = query["id"],
+        //             Status = query["status"]
+        //         };
+        //     return res;
+        // }
     }
 }
