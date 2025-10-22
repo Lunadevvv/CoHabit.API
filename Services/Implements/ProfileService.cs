@@ -39,7 +39,8 @@ namespace CoHabit.API.Services.Implements
                 user.PhoneNumber ?? string.Empty,
                 user.Yob,
                 user.Sex.ToString(),
-                user.Image
+                user.Image,
+                (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "BasicMember"
             );
         }
 
