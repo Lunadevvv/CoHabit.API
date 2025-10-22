@@ -17,6 +17,7 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
     public DbSet<Furniture> Furnitures { get; set; }
     public DbSet<Post> Posts { get; set; }
     public DbSet<PostImage> PostImages { get; set; }
+    public DbSet<PostFeedback> PostFeedbacks { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<Subcription> Subcriptions { get; set; }
     public DbSet<UserSubcription> UserSubcriptions { get; set; }
@@ -222,6 +223,26 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
             entity.HasOne(e => e.Post)
                 .WithMany(p => p.PostImages)
                 .HasForeignKey(e => e.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<PostFeedback>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.PostId).IsRequired();
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.Rating).IsRequired();
+            entity.Property(e => e.Comment).HasMaxLength(1000);
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime").IsRequired();
+
+            entity.HasOne(e => e.Post)
+                .WithMany(p => p.PostFeedbacks)
+                .HasForeignKey(e => e.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.PostFeedbacks)
+                .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

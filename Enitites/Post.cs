@@ -30,5 +30,7 @@ namespace CoHabit.API.Enitites
         public virtual ICollection<Order>? Orders { get; set; }
         [JsonIgnore]
         public virtual ICollection<PostImage>? PostImages { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<PostFeedback>? PostFeedbacks { get; set; }
     }
 }
