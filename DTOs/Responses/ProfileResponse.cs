@@ -12,7 +12,8 @@ namespace CoHabit.API.DTOs.Responses
         string Phone,
         string Yob,
         string Sex,
-        string Image
+        string Image,
+        string Role
     );
     
 }

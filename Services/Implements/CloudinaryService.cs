@@ -34,7 +34,8 @@ namespace CoHabit.API.Services.Implements
             var uploadParams = new ImageUploadParams
             {
                 File = new FileDescription(file.FileName, stream),
-                Transformation = new Transformation().Quality("auto").FetchFormat("auto"),
+                Transformation = new Transformation().Width(300).Height(400).Crop("pad")              // Thêm viền để vừa khung
+                    .Background("auto").Quality("auto").FetchFormat("auto"),
                 Folder = CLOUDINARY_FOLDER
             };
 
