@@ -29,5 +29,9 @@ namespace CoHabit.API.Enitites
         public virtual ICollection<UserSubcription>? UserSubcriptions { get; set; }
         [JsonIgnore]
         public virtual ICollection<PostFeedback>? PostFeedbacks { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<UserFeedback>? SentFeedbacks { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<UserFeedback>? ReceivedFeedbacks { get; set; }
     }
 }

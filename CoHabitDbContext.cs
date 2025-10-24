@@ -11,6 +11,7 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
     }
 
     public DbSet<User> Users { get; set; }
+    public DbSet<UserFeedback> UserFeedbacks { get; set; }
     public DbSet<Characteristic> Characteristics { get; set; }
     public DbSet<Otp> Otps { get; set; }
     public DbSet<Payment> Payments { get; set; }
@@ -35,9 +36,9 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
             entity.Property(u => u.LastName).HasMaxLength(10);
             entity.Property(u => u.PhoneNumber).HasMaxLength(10);
             entity.Property(u => u.Image).HasMaxLength(2048);
-            entity.HasIndex(e => e.Id, "UQ__User__1788CC4DF7FFBA69").IsUnique();
-            entity.HasIndex(e => e.PhoneNumber, "UQ__User__536C85E43394AC26").IsUnique();
-            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+            // entity.HasIndex(e => e.Id, "UQ__User__1788CC4DF7FFBA69").IsUnique(); // Commented: Id is already unique as primary key
+            entity.HasIndex(e => e.PhoneNumber, "IX_Users_PhoneNumber").IsUnique();
+            entity.Property(e => e.CreatedAt).HasColumnType("TIMESTAMPTZ");
 
             entity.HasMany(u => u.Characteristics)
                     .WithMany(c => c.Users)
@@ -84,22 +85,42 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
                     });
         });
 
+        builder.Entity<UserFeedback>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.SenderId).IsRequired();
+            entity.Property(e => e.ReceiverId).IsRequired();
+            entity.Property(e => e.Rating).IsRequired();
+            entity.Property(e => e.Comment).HasMaxLength(1000);
+            entity.Property(e => e.CreatedAt).HasColumnType("TIMESTAMPTZ").IsRequired();
+
+            entity.HasOne(e => e.Sender)
+                .WithMany(u => u.SentFeedbacks)
+                .HasForeignKey(e => e.SenderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Receiver)
+                .WithMany(u => u.ReceivedFeedbacks)
+                .HasForeignKey(e => e.ReceiverId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         builder.Entity<Characteristic>(entity =>
         {
             entity.HasKey(e => e.CharId);
             entity.Property(e => e.CharId).HasMaxLength(5);
             entity.Property(e => e.Title).HasMaxLength(50);
-            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
-            entity.HasIndex(e => e.CharId, "UQ__Characte__1788CC4D1E3E2C2E").IsUnique();
+            entity.Property(e => e.CreatedAt).HasColumnType("TIMESTAMPTZ");
+            // entity.HasIndex(e => e.CharId, "UQ__Characte__1788CC4D1E3E2C2E").IsUnique(); // Commented: CharId is already unique as primary key
         });
 
         builder.Entity<Otp>(entity =>
         {
             entity.HasKey(e => e.OtpId);
             entity.Property(e => e.Phone).HasMaxLength(10);
-            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
-            entity.Property(e => e.ExpiredAt).HasColumnType("datetime");
-            entity.HasIndex(e => e.Phone, "UQ__Otp__C8EE201F536C85E4").IsUnique();
+            entity.Property(e => e.CreatedAt).HasColumnType("TIMESTAMPTZ");
+            entity.Property(e => e.ExpiredAt).HasColumnType("TIMESTAMPTZ");
+            entity.HasIndex(e => e.Phone, "IX_Otps_Phone").IsUnique();
         });
 
         //Seed data mặc định vào bảng asp.net role
@@ -147,12 +168,11 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
             entity.Property(e => e.PaymentId).HasMaxLength(26);
             entity.Property(e => e.PaymentLinkId).HasMaxLength(50).IsRequired();
             entity.Property(e => e.Price).IsRequired();
-            entity.Property(e => e.Status).HasMaxLength(20).IsRequired();
-            entity.Property(e => e.CreatedDate).HasColumnType("datetime").IsRequired();
-            entity.Property(e => e.UpdatedDate).HasColumnType("datetime").IsRequired();
-            entity.Property(e => e.UserId).HasMaxLength(40).IsRequired();
+            // entity.Property(e => e.Status).HasMaxLength(20).IsRequired(); // Commented: Status is enum, no need to set max length
+            entity.Property(e => e.CreatedDate).HasColumnType("TIMESTAMPTZ").IsRequired();
+            entity.Property(e => e.UpdatedDate).HasColumnType("TIMESTAMPTZ").IsRequired();
             entity.Property(e => e.Description).HasMaxLength(20);
-            entity.HasIndex(e => e.PaymentLinkId, "IX_Payment_PaymentLinkId");
+            entity.HasIndex(e => e.PaymentLinkId, "IX_Payments_PaymentLinkId");
             
             entity.HasOne(e => e.User)
                 .WithMany(u => u.Payments)
@@ -166,9 +186,8 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
             entity.Property(e => e.FurId).HasMaxLength(6);
             entity.Property(e => e.Name).HasMaxLength(50).IsRequired();
             entity.Property(e => e.IsActive).IsRequired();
-            entity.Property(e => e.CreatedAt).HasColumnType("datetime").IsRequired();
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetime").IsRequired();
-            entity.HasIndex(e => e.FurId, "UQ__Furnitu__1788CC4D8C1E3A2E").IsUnique();
+            entity.Property(e => e.CreatedAt).HasColumnType("TIMESTAMPTZ").IsRequired();
+            entity.Property(e => e.UpdatedAt).HasColumnType("TIMESTAMPTZ").IsRequired();
         });
 
         builder.Entity<Post>(entity =>
@@ -180,9 +199,8 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
             entity.Property(e => e.Description).HasMaxLength(1000);
             entity.Property(e => e.Condition).HasMaxLength(1000);
             entity.Property(e => e.DepositPolicy).HasMaxLength(1000);
-            entity.Property(e => e.Status).IsRequired();
-            entity.Property(e => e.CreatedAt).HasColumnType("datetime").IsRequired();
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetime").IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnType("TIMESTAMPTZ").IsRequired();
+            entity.Property(e => e.UpdatedAt).HasColumnType("TIMESTAMPTZ").IsRequired();
             entity.Property(e => e.UserId).IsRequired();
 
             entity.HasOne(e => e.User)
@@ -233,7 +251,7 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
             entity.Property(e => e.UserId).IsRequired();
             entity.Property(e => e.Rating).IsRequired();
             entity.Property(e => e.Comment).HasMaxLength(1000);
-            entity.Property(e => e.CreatedAt).HasColumnType("datetime").IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnType("TIMESTAMPTZ").IsRequired();
 
             entity.HasOne(e => e.Post)
                 .WithMany(p => p.PostFeedbacks)
@@ -249,7 +267,7 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
         builder.Entity<Order>(entity =>
         {
             entity.HasKey(e => e.OrderId);
-            entity.Property(e => e.CreatedAt).HasColumnType("datetime").IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnType("TIMESTAMPTZ").IsRequired();
             entity.Property(e => e.UserId).IsRequired();
             entity.Property(e => e.PostId).IsRequired();
             entity.Property(e => e.OwnerId).IsRequired();
@@ -278,8 +296,8 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
         builder.Entity<UserSubcription>(entity =>
         {
             entity.HasKey(e => new { e.UserId, e.SubcriptionId });
-            entity.Property(e => e.StartDate).HasColumnType("datetime").IsRequired();
-            entity.Property(e => e.EndDate).HasColumnType("datetime").IsRequired();
+            entity.Property(e => e.StartDate).HasColumnType("TIMESTAMPTZ").IsRequired();
+            entity.Property(e => e.EndDate).HasColumnType("TIMESTAMPTZ").IsRequired();
             entity.Property(e => e.IsActive).IsRequired();
 
             entity.HasOne(e => e.User)

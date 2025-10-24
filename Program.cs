@@ -56,10 +56,14 @@ namespace CoHabit.API
                 });
             });
             
-            builder.Services.AddDbContext<CoHabitDbContext>(opt =>
-            {
-                opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-            });
+            // builder.Services.AddDbContext<CoHabitDbContext>(opt =>
+            // {
+            //     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+            // });
+
+            builder.Services.AddDbContext<CoHabitDbContext>(options =>
+                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
             builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
                 {
                     options.Password.RequiredLength = 6;
