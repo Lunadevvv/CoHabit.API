@@ -19,9 +19,11 @@ namespace CoHabit.API.Controllers
     public class PostController : ControllerBase
     {
         private readonly IPostService _postService;
-        public PostController(IPostService postService)
+        private readonly IPostFeedbackService _postFeedbackService;
+        public PostController(IPostService postService, IPostFeedbackService postFeedbackService)
         {
             _postService = postService;
+            _postFeedbackService = postFeedbackService;
         }
 
         //API lấy tất cả bài viết với phân trang cho user
@@ -209,6 +211,84 @@ namespace CoHabit.API.Controllers
                     return BadRequest(ApiResponse<object>.ErrorResponse("Failed to update furniture in post."));
                 }
                 return Ok(ApiResponse<object>.SuccessResponse(new { }, "Furniture in post updated successfully."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        //API Thêm feedback cho bài viết
+        [HttpPost("feedback")]
+        [Authorize]
+        public async Task<ActionResult> AddPostFeedback([FromBody] PostFeedbackRequest req)
+        {
+            try
+            {
+                var userId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
+                    ? parsedUserId
+                    : throw new Exception("Invalid user ID");
+
+                // Check if user has already provided feedback for the post
+                var isAlreadyFeedback = await _postFeedbackService.IsUserAlreadyFeedbackByPostId(userId, req.PostId);
+                if (isAlreadyFeedback)
+                {
+                    return BadRequest(ApiResponse<object>.ErrorResponse("User has already provided feedback for this post."));
+                }
+
+                var postFeedback = new PostFeedback
+                {
+                    Id = Guid.NewGuid(),
+                    PostId = req.PostId,
+                    UserId = userId,
+                    Rating = req.Rating,
+                    Comment = req.Comment,
+                    CreatedAt = DateTime.UtcNow,
+                    IsDeleted = false
+                };
+                
+                var result = await _postFeedbackService.AddPostFeedbackAsync(postFeedback);
+                if (result == 0)
+                {
+                    return BadRequest(ApiResponse<object>.ErrorResponse("Failed to add post feedback."));
+                }
+                return Ok(ApiResponse<object>.SuccessResponse(new { }, $"Added new feedback for {req.PostId} successfully."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        //API Xóa feedback cho bài viết của admin, moderator
+        [HttpDelete("feedback/{postFeedbackId}")]
+        [Authorize(Roles = "Admin, Moderator")]
+        public async Task<ActionResult> DeletePostFeedback(Guid postFeedbackId)
+        {
+            try
+            {
+                var result = await _postFeedbackService.DeletePostFeedbackAsync(postFeedbackId);
+                if (result == 0)
+                {
+                    return BadRequest(ApiResponse<object>.ErrorResponse("Failed to delete post feedback."));
+                }
+                return Ok(ApiResponse<object>.SuccessResponse(new { }, "Post feedback deleted successfully."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        //API lấy tất cả feedback của bài viết
+        [HttpGet("feedback/{postId}")]
+        [Authorize]
+        public async Task<ActionResult<List<PostFeedback>>> GetPostFeedbacksByPostId(Guid postId)
+        {
+            try
+            {
+                var feedbacks = await _postFeedbackService.GetPostFeedbacksByPostIdAsync(postId);
+                return Ok(ApiResponse<List<PostFeedback>>.SuccessResponse(feedbacks.ToList(), "Post feedbacks retrieved successfully."));
             }
             catch (Exception ex)
             {
