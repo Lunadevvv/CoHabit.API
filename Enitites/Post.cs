@@ -16,6 +16,7 @@ namespace CoHabit.API.Enitites
         public string? Description { get; set; }
         public string? Condition { get; set; }
         public string? DepositPolicy { get; set; }
+        public double AverageRating { get; set; } = 0.0;
         public PostStatus Status { get; set; } = PostStatus.Pending;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

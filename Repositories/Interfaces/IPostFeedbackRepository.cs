@@ -10,7 +10,6 @@ namespace CoHabit.API.Repositories.Interfaces
     {
         void AddPostFeedbackAsync(PostFeedback postFeedback);
         Task<IEnumerable<PostFeedback>> GetPostFeedbacksByPostIdAsync(Guid postId);
-        Task<double> GetAverageRatingByPostIdAsync(Guid postId);
         void UpdatePostFeedbackAsync(PostFeedback postFeedback);
         Task<PostFeedback?> GetPostFeedbackByIdAsync(Guid postFeedbackId);
         Task<bool> IsUserAlreadyFeedbackByPostId(Guid userId, Guid postId);

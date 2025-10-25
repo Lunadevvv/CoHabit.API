@@ -53,7 +53,8 @@ namespace CoHabit.API.Services.Implements
                     p.User.Image
                 ) : null,
                 ImageUrl = p.PostImages != null ? p.PostImages.Select(img => img.ImageUrl).ToList() : new List<string>(),
-                Furnitures = null
+                Furnitures = null,
+                AverageRating = p.AverageRating
             }).ToList();
 
             var response = new PaginationResponse<List<PostResponse>>
@@ -89,7 +90,8 @@ namespace CoHabit.API.Services.Implements
                     p.User.Image
                 ) : null,
                 ImageUrl = p.PostImages != null ? p.PostImages.Select(img => img.ImageUrl).ToList() : new List<string>(),
-                Furnitures = null
+                Furnitures = null,
+                AverageRating = p.AverageRating
             }).ToList();
             return postResponses;
         }
@@ -122,7 +124,8 @@ namespace CoHabit.API.Services.Implements
                     p.User.Image
                 ) : null,
                 ImageUrl = p.PostImages != null ? p.PostImages.Select(img => img.ImageUrl).ToList() : new List<string>(),
-                Furnitures = null
+                Furnitures = null,
+                AverageRating = p.AverageRating
             }).ToList();
 
             return postResponses;
@@ -152,7 +155,8 @@ namespace CoHabit.API.Services.Implements
                     p.User.Image
                 ) : null,
                 ImageUrl = p.PostImages != null ? p.PostImages.Select(img => img.ImageUrl).ToList() : new List<string>(),
-                Furnitures = null
+                Furnitures = null,
+                AverageRating = p.AverageRating
             }).ToList();
 
             return postResponses;
@@ -182,7 +186,8 @@ namespace CoHabit.API.Services.Implements
                     post.User.Image
                 ) : null,
                 ImageUrl = post.PostImages != null ? post.PostImages.Select(img => img.ImageUrl).ToList() : new List<string>(),
-                Furnitures = post.Furnitures?.Select(f => new FurnitureResponse(f.FurId, f.Name)).ToList()
+                Furnitures = post.Furnitures?.Select(f => new FurnitureResponse(f.FurId, f.Name)).ToList(),
+                AverageRating = post.AverageRating
             };
             return postResponse;
         }

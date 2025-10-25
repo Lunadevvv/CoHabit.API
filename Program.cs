@@ -187,6 +187,29 @@ namespace CoHabit.API
 
             var app = builder.Build();
 
+            try
+            {
+                using var scope = app.Services.CreateScope();
+                var services = scope.ServiceProvider;
+                var context = services.GetRequiredService<CoHabitDbContext>();
+                var logger = services.GetRequiredService<ILogger<Program>>();
+                
+                logger.LogInformation("Applying pending migrations...");
+                context.Database.Migrate();
+                logger.LogInformation("Migrations applied successfully!");
+            }
+            catch (Exception ex)
+            {
+                var logger = app.Services.GetRequiredService<ILogger<Program>>();
+                logger.LogError(ex, "An error occurred while migrating the database");
+                
+                // Trong production, bạn có thể muốn app dừng lại nếu migration fail
+                if (app.Environment.IsProduction())
+                {
+                    throw;
+                }
+            }
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {

@@ -18,6 +18,7 @@ namespace CoHabit.API.DTOs.Responses
         public string? DepositPolicy { get; set; }
         public PostStatus Status { get; set; }
         public UserResponse? User { get; set; }
+        public double AverageRating { get; set; }
         public ICollection<FurnitureResponse>? Furnitures { get; set; }
         public ICollection<string> ImageUrl { get; set; } = new List<string>();
     }

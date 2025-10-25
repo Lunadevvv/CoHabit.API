@@ -26,13 +26,6 @@ namespace CoHabit.API.Repositories.Implements
             _context.PostFeedbacks.Update(postFeedback);
         }
 
-        public async Task<double> GetAverageRatingByPostIdAsync(Guid postId)
-        {
-            return await _context.PostFeedbacks
-                .Where(pf => pf.PostId == postId && !pf.IsDeleted)
-                .AverageAsync(pf => pf.Rating);
-        }
-
         public async Task<IEnumerable<PostFeedback>> GetPostFeedbacksByPostIdAsync(Guid postId)
         {
             return await _context.PostFeedbacks
