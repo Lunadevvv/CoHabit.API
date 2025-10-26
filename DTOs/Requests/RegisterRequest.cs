@@ -13,6 +13,7 @@ namespace CoHabit.API.DTOs.Requests
         public required string Phone { get; set; }
         [EmailAddress(ErrorMessage = "Địa chỉ email không hợp lệ.")]
         public required string Email { get; set; }
+        [MinLength(6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự.")]
         public required string Password { get; set; }
     }
 }
