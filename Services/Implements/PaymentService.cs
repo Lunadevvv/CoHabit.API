@@ -47,8 +47,8 @@ namespace CoHabit.API.Services.Implements
             {
                 throw new Exception("User not found");
             }
-            payment.CreatedDate = DateTime.Now;
-            payment.UpdatedDate = DateTime.Now;
+            payment.CreatedDate = DateTime.UtcNow;
+            payment.UpdatedDate = DateTime.UtcNow;
             payment.User = user;
             _paymentRepository.CreatePayment(payment);
             await _paymentRepository.SaveChangesAsync();
@@ -82,7 +82,7 @@ namespace CoHabit.API.Services.Implements
 
         public async Task UpdatePaymentStatus(Payment payment)
         {
-            payment.UpdatedDate = DateTime.Now;
+            payment.UpdatedDate = DateTime.UtcNow;
             await _paymentRepository.UpdatePayment(payment);
             await _paymentRepository.SaveChangesAsync();
         }

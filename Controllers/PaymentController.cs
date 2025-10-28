@@ -107,8 +107,8 @@ namespace CoHabit.API.Controllers
                 Price = request.Amount,
                 Description = request.Description,
                 Status = PaymentStatus.InProgress,
-                CreatedDate = DateTime.Now,
-                UpdatedDate = DateTime.Now,
+                CreatedDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow,
                 UserId = userId,
                 SubcriptionId = request.SubcriptionId
             };
@@ -122,64 +122,23 @@ namespace CoHabit.API.Controllers
             });
         }
 
-        // [HttpPatch("update-status")]
-        // public async Task<IActionResult> UpdatePaymentStatus()
-        // {
-        //     if (Request.QueryString.HasValue)
-        //     {
-        //         //Get payment info from query string
-        //         var paymentResult = _payOSService.GetPaymentInfo(Request.Query);
-        //         if (paymentResult == null || string.IsNullOrEmpty(paymentResult.PaymentLinkId))
-        //         {
-        //             return BadRequest("Invalid payment information");
-        //         }
+        [HttpPatch("update-cancel-status")]
+        public async Task<IActionResult> UpdatePaymentStatus([FromQuery] string paymentLinkId, [FromQuery] string status)
+        {
+            //Find payment by paymentLinkId
+            var payment = await _paymentService.GetPaymentByPaymentLinkId(paymentLinkId);
+            if (payment == null)
+            {
+                return NotFound("Payment not found");
+            }
+            
+            if (status == "CANCELLED")
+            {
+                payment.Status = PaymentStatus.Cancelled;
+            }
 
-        //         //Find payment by paymentLinkId
-        //         var payment = await _paymentService.GetPaymentByPaymentLinkId(paymentResult.PaymentLinkId);
-        //         if (payment == null)
-        //         {
-        //             return NotFound("Payment not found");
-        //         }
-
-        //         //Get Subcription from subcriptionId
-        //         var subcription = await _subcriptionService.GetSubcriptionById(payment.SubcriptionId);
-        //         if (subcription == null)
-        //         {
-        //             return NotFound("Subcription not found");
-        //         }
-                
-        //         // Update payment status based on the status from query
-        //         if (paymentResult.Status == "PAID")
-        //         {
-        //             payment.Status = PaymentStatus.Success;
-
-        //             // Create UserSubcription
-        //             var userSubcription = new UserSubcription
-        //             {
-        //                 UserId = payment.UserId,
-        //                 SubcriptionId = subcription.SubcriptionId,
-        //                 StartDate = DateTime.Now,
-        //                 EndDate = DateTime.Now.AddDays(subcription.DurationInDays),
-        //                 IsActive = true
-        //             };
-        //             await _userSubcriptionService.AddUserSubcription(userSubcription);
-
-        //             // Update user's role
-        //             await _authService.AssignRoleAsync(payment.UserId, subcription.Name);
-        //         }
-        //         else if (paymentResult.Status == "CANCELLED")
-        //         {
-        //             payment.Status = PaymentStatus.Cancelled;
-        //         }
-        //         else
-        //         {
-        //             payment.Status = PaymentStatus.InProgress;
-        //         }
-
-        //         await _paymentService.UpdatePaymentStatus(payment);
-        //         return Ok("Payment status updated");
-        //     }
-        //     return BadRequest("Missing query string");
-        // }
+            await _paymentService.UpdatePaymentStatus(payment);
+            return Ok("Payment status updated to " + status);
+        }
     }
 }

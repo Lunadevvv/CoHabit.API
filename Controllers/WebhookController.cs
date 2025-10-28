@@ -107,15 +107,15 @@ namespace CoHabit.API.Controllers
             if (code == "00")
             {
                 payment.Status = PaymentStatus.Success;
-                payment.UpdatedDate = DateTime.Now;
+                payment.UpdatedDate = DateTime.UtcNow;
                 
                 // Create user subscription
                 var userSubscription = new UserSubcription
                 {
                     UserId = payment.UserId,
                     SubcriptionId = payment.SubcriptionId,
-                    StartDate = DateTime.Now,
-                    EndDate = DateTime.Now.AddDays(subcription.DurationInDays),
+                    StartDate = DateTime.UtcNow,
+                    EndDate = DateTime.UtcNow.AddDays(subcription.DurationInDays),
                     IsActive = true
                 };
 
@@ -128,7 +128,7 @@ namespace CoHabit.API.Controllers
             {
                 // Any other code means failed
                 payment.Status = PaymentStatus.Failed;
-                payment.UpdatedDate = DateTime.Now;
+                payment.UpdatedDate = DateTime.UtcNow;
                 _logger.LogWarning("Payment {PaymentId} marked as Failed with code: {Code}, desc: {Desc}", 
                     payment.PaymentId, code, desc);
             }
