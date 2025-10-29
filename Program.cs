@@ -1,6 +1,7 @@
 
 using System.Text;
 using CoHabit.API.Enitites;
+using CoHabit.API.Hubs;
 using CoHabit.API.Repositories.Implements;
 using CoHabit.API.Repositories.Interfaces;
 using CoHabit.API.Services.Implements;
@@ -109,6 +110,15 @@ namespace CoHabit.API
                         {
                             // Lấy token từ cookie thay vì header
                             context.Token = context.Request.Cookies["AccessToken"];
+                            
+                            // Also check for SignalR connections
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/chat"))
+                            {
+                                context.Token = accessToken;
+                            }
+                            
                             return Task.CompletedTask;
                         }
                     };
@@ -157,6 +167,9 @@ namespace CoHabit.API
             builder.Services.AddScoped<IPayOSService, PayOSService>();
             builder.Services.AddScoped<IPostFeedbackRepository, PostFeedbackRepository>();
             builder.Services.AddScoped<IPostFeedbackService, PostFeedbackService>();
+            builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
+            builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+            builder.Services.AddScoped<IChatService, ChatService>();
 
             // PayOS configuration and HttpClient
             builder.Services.Configure<PayOSConfig>(builder.Configuration.GetSection("PayOS"));
@@ -184,6 +197,14 @@ namespace CoHabit.API
 
             var cloudinary = new Cloudinary(cloudinaryAccount);
             builder.Services.AddSingleton(cloudinary);
+
+            //SignalR with extended timeout for long-polling
+            builder.Services.AddSignalR(options =>
+            {
+                options.EnableDetailedErrors = true;
+                options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+                options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+            });
 
             var app = builder.Build();
 
@@ -223,8 +244,8 @@ namespace CoHabit.API
             app.UseAuthentication();
             app.UseAuthorization();
 
-
             app.MapControllers();
+            app.MapHub<ChatHub>("/hubs/chat");
 
             app.Run();
         }

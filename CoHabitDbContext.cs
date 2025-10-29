@@ -22,6 +22,8 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
     public DbSet<Order> Orders { get; set; }
     public DbSet<Subcription> Subcriptions { get; set; }
     public DbSet<UserSubcription> UserSubcriptions { get; set; }
+    public DbSet<Conversation> Conversations { get; set; }
+    public DbSet<Message> Messages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
 
@@ -309,6 +311,53 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
                 .WithMany(u => u.UserSubcriptions)
                 .HasForeignKey(e => e.SubcriptionId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Conversation>(entity =>
+        {
+            entity.HasKey(e => e.ConversationId);
+            entity.Property(e => e.CreatedAt).HasColumnType("TIMESTAMPTZ").IsRequired();
+            entity.Property(e => e.LastMessageAt).HasColumnType("TIMESTAMPTZ");
+            entity.Property(e => e.IsActive).IsRequired();
+
+            entity.HasOne(e => e.Post)
+                .WithMany()
+                .HasForeignKey(e => e.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User1)
+                .WithMany()
+                .HasForeignKey(e => e.User1Id)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(e => e.User2)
+                .WithMany()
+                .HasForeignKey(e => e.User2Id)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Ensure unique conversation per post between two users
+            entity.HasIndex(e => new { e.PostId, e.User1Id, e.User2Id }).IsUnique();
+        });
+
+        builder.Entity<Message>(entity =>
+        {
+            entity.HasKey(e => e.MessageId);
+            entity.Property(e => e.Content).HasMaxLength(2000).IsRequired();
+            entity.Property(e => e.IsRead).IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnType("TIMESTAMPTZ").IsRequired();
+
+            entity.HasOne(e => e.Conversation)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(e => e.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Sender)
+                .WithMany()
+                .HasForeignKey(e => e.SenderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ConversationId);
+            entity.HasIndex(e => e.CreatedAt);
         });
     }
 }
