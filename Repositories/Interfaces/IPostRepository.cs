@@ -11,6 +11,7 @@ namespace CoHabit.API.Repositories.Interfaces
     public interface IPostRepository
     {
         Task<PaginationResponse<List<Post>>> GetPostsAsync(int CurrentPage, int pageSize);
+        Task<PaginationResponse<List<Post>>> SearchPostsWithPaginationAsync(int currentPage, int pageSize, string? address, int? maxPrice, double? averageRating);
         Task<List<Post>> GetAllPostsAsync();
         Task<List<Post>> GetAllPostsByStatusAsync(PostStatus status);
         Task<List<Post>> GetAllPostsByUserAsync(Guid userId);

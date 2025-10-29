@@ -101,5 +101,47 @@ namespace CoHabit.API.Repositories.Implements
                 .Where(p => p.PostId == postId && p.LikedByUsers.Any(u => u.Id == userId))
                 .FirstOrDefaultAsync();
         }
+
+        public async Task<PaginationResponse<List<Post>>> SearchPostsWithPaginationAsync(int currentPage, int pageSize, string? address, int? maxPrice, double? averageRating)
+        {
+            var query = _context.Posts
+                .Include(p => p.User)
+                .Include(p => p.PostImages)
+                .AsSplitQuery()
+                .Where(p => p.Status == PostStatus.Publish)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(address))
+            {
+                query = query.Where(p => p.Address.Contains(address));
+            }
+
+            if (maxPrice.HasValue)
+            {
+                query = query.Where(p => p.Price <= maxPrice.Value);
+            }
+
+            if (averageRating.HasValue)
+            {
+                query = query.Where(p => p.AverageRating >= averageRating.Value);
+            }
+
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+            var items = await query
+                .Skip((currentPage - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PaginationResponse<List<Post>>
+            {
+                CurrentPage = currentPage,
+                PageSize = pageSize,
+                TotalCount = totalItems,
+                TotalPages = totalPages,
+                Items = items
+            } ?? new PaginationResponse<List<Post>> { Items = new List<Post>() };
+        }
     }
 }

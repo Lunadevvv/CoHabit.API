@@ -42,6 +42,22 @@ namespace CoHabit.API.Controllers
             }
         }
 
+        //API Lấy tất cả bài viết theo thông tin filter
+        [HttpGet("search")]
+        [Authorize(Roles = "Admin, Moderator, PlusMember, ProMember")]
+        public Task<ActionResult<PaginationResponse<List<PostResponse>>>> SearchPostsWithPagination(int currentPage, int pageSize, string? address, int? maxPrice, double? averageRating)
+        {
+            try
+            {
+                var posts = _postService.SearchPostsWithPaginationAsync(currentPage, pageSize, address, maxPrice, averageRating);
+                return Task.FromResult<ActionResult<PaginationResponse<List<PostResponse>>>>(Ok(ApiResponse<PaginationResponse<List<PostResponse>>>.SuccessResponse(posts.Result, "Posts retrieved successfully.")));
+            }
+            catch (Exception ex)
+            {
+                return Task.FromResult<ActionResult<PaginationResponse<List<PostResponse>>>>(BadRequest(ex.Message));
+            }
+        }
+
         //API lấy tất cả bài viết của admin
         [HttpGet("admin")]
         [Authorize(Roles = "Admin")]

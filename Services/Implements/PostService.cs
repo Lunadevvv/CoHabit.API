@@ -287,5 +287,45 @@ namespace CoHabit.API.Services.Implements
             return await _postRepository.SaveChangesAsync();
 
         }
+
+        public async Task<PaginationResponse<List<PostResponse>>> SearchPostsWithPaginationAsync(int currentPage, int pageSize, string? address, int? maxPrice, double? averageRating)
+        {
+            var result = await _postRepository.SearchPostsWithPaginationAsync(currentPage, pageSize, address, maxPrice, averageRating);
+
+            // Map Post to PostResponse
+            var postResponses = result.Items.Select(p => new PostResponse
+            {
+                PostId = p.PostId,
+                Title = p.Title,
+                Description = p.Description,
+                Price = p.Price,
+                Address = p.Address,
+                Condition = p.Condition,
+                DepositPolicy = p.DepositPolicy,
+                Status = p.Status,
+                User = p.User != null ? new UserResponse
+                (
+                    p.User.Id,
+                    p.User.FirstName,
+                    p.User.LastName,
+                    p.User.PhoneNumber,
+                    p.User.Image
+                ) : null,
+                ImageUrl = p.PostImages != null ? p.PostImages.Select(img => img.ImageUrl).ToList() : new List<string>(),
+                Furnitures = null,
+                AverageRating = p.AverageRating
+            }).ToList();
+
+            var response = new PaginationResponse<List<PostResponse>>
+            {
+                Items = postResponses,
+                CurrentPage = result.CurrentPage,
+                TotalPages = result.TotalPages,
+                PageSize = result.PageSize,
+                TotalCount = result.TotalCount
+            };
+
+            return response;
+        }
     }
 }
