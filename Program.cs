@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using CoHabit.API.Helpers;
 using CloudinaryDotNet;
+using CoHabit.API.Hubs;
 
 namespace CoHabit.API
 {
@@ -109,6 +110,15 @@ namespace CoHabit.API
                         {
                             // Lấy token từ cookie thay vì header
                             context.Token = context.Request.Cookies["AccessToken"];
+                            
+                            // Hỗ trợ SignalR authentication qua query string
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chathub"))
+                            {
+                                context.Token = accessToken;
+                            }
+                            
                             return Task.CompletedTask;
                         }
                     };
@@ -129,7 +139,8 @@ namespace CoHabit.API
                         )
                             .AllowAnyHeader()
                             .AllowAnyMethod()
-                            .AllowCredentials(); // QUAN TRỌNG: Cho phép cookies
+                            .AllowCredentials() // QUAN TRỌNG: Cho phép cookies
+                            .SetIsOriginAllowedToAllowWildcardSubdomains(); // Hỗ trợ SignalR
                     });
             });
 
@@ -157,6 +168,9 @@ namespace CoHabit.API
             builder.Services.AddScoped<IPayOSService, PayOSService>();
             builder.Services.AddScoped<IPostFeedbackRepository, PostFeedbackRepository>();
             builder.Services.AddScoped<IPostFeedbackService, PostFeedbackService>();
+            builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
+            builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+            builder.Services.AddScoped<IChatService, ChatService>();
 
             // PayOS configuration and HttpClient
             builder.Services.Configure<PayOSConfig>(builder.Configuration.GetSection("PayOS"));
@@ -184,6 +198,18 @@ namespace CoHabit.API
 
             var cloudinary = new Cloudinary(cloudinaryAccount);
             builder.Services.AddSingleton(cloudinary);
+
+            //SignalR with CORS support
+            builder.Services.AddSignalR(options =>
+            {
+                options.EnableDetailedErrors = true;
+                options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+                options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+            })
+            .AddJsonProtocol(options =>
+            {
+                options.PayloadSerializerOptions.PropertyNamingPolicy = null;
+            });
 
             var app = builder.Build();
 
@@ -218,14 +244,22 @@ namespace CoHabit.API
             }
             app.UseHttpsRedirection();
 
+            // CORS phải được đặt TRƯỚC Authentication/Authorization
             app.UseCors("AllowFrontend");
 
             app.UseAuthentication();
             app.UseAuthorization();
 
-
             app.MapControllers();
-
+            
+            // Map SignalR hub với CORS
+            app.MapHub<ChatHub>("/chathub", options =>
+            {
+                options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets | 
+                                   Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
+            })
+            .RequireCors("AllowFrontend"); // Áp dụng CORS policy cho hub
+            
             app.Run();
         }
     }

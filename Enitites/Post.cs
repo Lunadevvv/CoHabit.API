@@ -33,5 +33,7 @@ namespace CoHabit.API.Enitites
         public virtual ICollection<PostImage>? PostImages { get; set; }
         [JsonIgnore]
         public virtual ICollection<PostFeedback>? PostFeedbacks { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Conversation>? Conversations { get; set; }
     }
 }

@@ -22,6 +22,8 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
     public DbSet<Order> Orders { get; set; }
     public DbSet<Subcription> Subcriptions { get; set; }
     public DbSet<UserSubcription> UserSubcriptions { get; set; }
+    public DbSet<Conversation> Conversations { get; set; }
+    public DbSet<Message> Messages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
 
@@ -129,34 +131,34 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
             {
                 new IdentityRole<Guid>()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Guid.Parse("2e11f535-051e-4d86-9ddc-3543c6eabfd4"),
                     Name = "Admin",
                     NormalizedName = "ADMIN"
                 },
                 new IdentityRole<Guid>()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Guid.Parse("6a207f7c-9614-4fec-96e8-53cfe31ed8f2"),
                     Name = "Moderator",
                     NormalizedName = "MODERATOR"
                 },
 
                 new IdentityRole<Guid>()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Guid.Parse("fc5ac104-d527-4d25-b9c9-358295d54ea4"),
                     Name = "ProMember",
                     NormalizedName = "PROMEMBER"
                 },
 
                 new IdentityRole<Guid>()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Guid.Parse("e15a9a60-10ae-4f93-acb7-3d38a4cc4125"),
                     Name = "PlusMember",
                     NormalizedName = "PLUSMEMBER"
                 },
 
                 new IdentityRole<Guid>()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Guid.Parse("3416a9bb-49a6-420f-832f-78b197f57bc2"),
                     Name = "BasicMember",
                     NormalizedName = "BASICMEMBER"
                 }
@@ -308,6 +310,51 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
             entity.HasOne(e => e.Subcription)
                 .WithMany(u => u.UserSubcriptions)
                 .HasForeignKey(e => e.SubcriptionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Conversation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.PostId).IsRequired();
+            entity.Property(e => e.OwnerId).IsRequired();
+            entity.Property(e => e.InterestedUserId).IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnType("TIMESTAMPTZ").IsRequired();
+            entity.Property(e => e.LastMessageAt).HasColumnType("TIMESTAMPTZ");
+
+            entity.HasOne(e => e.Post)
+                .WithMany(p => p.Conversations)
+                .HasForeignKey(e => e.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Owner)
+                .WithMany(u => u.OwnedConversations)
+                .HasForeignKey(e => e.OwnerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.InterestedUser)
+                .WithMany(u => u.InterestedConversations)
+                .HasForeignKey(e => e.InterestedUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Message>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ConversationId).IsRequired();
+            entity.Property(e => e.SenderId).IsRequired();
+            entity.Property(e => e.Content).HasMaxLength(2000).IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnType("TIMESTAMPTZ").IsRequired();
+            entity.Property(e => e.IsRead).IsRequired();
+
+            entity.HasOne(e => e.Conversation)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(e => e.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Sender)
+                .WithMany(u => u.SentMessages)
+                .HasForeignKey(e => e.SenderId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

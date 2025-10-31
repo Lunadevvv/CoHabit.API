@@ -3,6 +3,7 @@ using System;
 using CoHabit.API;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CoHabit.API.Migrations
 {
     [DbContext(typeof(CoHabitDbContext))]
-    partial class CoHabitDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251029113405_AddMessageAndConvesations")]
+    partial class AddMessageAndConvesations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -573,38 +576,6 @@ namespace CoHabit.API.Migrations
                         .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("AspNetRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("2e11f535-051e-4d86-9ddc-3543c6eabfd4"),
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
-                        },
-                        new
-                        {
-                            Id = new Guid("6a207f7c-9614-4fec-96e8-53cfe31ed8f2"),
-                            Name = "Moderator",
-                            NormalizedName = "MODERATOR"
-                        },
-                        new
-                        {
-                            Id = new Guid("fc5ac104-d527-4d25-b9c9-358295d54ea4"),
-                            Name = "ProMember",
-                            NormalizedName = "PROMEMBER"
-                        },
-                        new
-                        {
-                            Id = new Guid("e15a9a60-10ae-4f93-acb7-3d38a4cc4125"),
-                            Name = "PlusMember",
-                            NormalizedName = "PLUSMEMBER"
-                        },
-                        new
-                        {
-                            Id = new Guid("3416a9bb-49a6-420f-832f-78b197f57bc2"),
-                            Name = "BasicMember",
-                            NormalizedName = "BASICMEMBER"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
