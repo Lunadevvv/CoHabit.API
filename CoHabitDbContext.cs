@@ -164,6 +164,19 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
                 }
             });
 
+        // Configure AspNetUserRoles delete behavior
+        builder.Entity<IdentityUserRole<Guid>>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(ur => ur.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<IdentityUserRole<Guid>>()
+            .HasOne<IdentityRole<Guid>>()
+            .WithMany()
+            .HasForeignKey(ur => ur.RoleId)
+            .OnDelete(DeleteBehavior.NoAction);
+
         builder.Entity<Payment>(entity =>
         {
             entity.HasKey(e => e.PaymentId);

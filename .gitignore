@@ -323,6 +323,7 @@ _Pvt_Extensions
 .paket/paket.exe
 paket-files/
 appsettings.*.json
+appsettings.Development.json
 # FAKE - F# Make
 .fake/
 

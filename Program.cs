@@ -21,8 +21,10 @@ namespace CoHabit.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // Load .env file
+            DotNetEnv.Env.Load();
 
+            // Add services to the container.
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -56,11 +58,6 @@ namespace CoHabit.API
                     }
                 });
             });
-            
-            // builder.Services.AddDbContext<CoHabitDbContext>(opt =>
-            // {
-            //     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-            // });
 
             builder.Services.AddDbContext<CoHabitDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -256,7 +253,7 @@ namespace CoHabit.API
             app.MapHub<ChatHub>("/chathub", options =>
             {
                 options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets | 
-                                   Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
+                                        Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
             })
             .RequireCors("AllowFrontend"); // Áp dụng CORS policy cho hub
             
