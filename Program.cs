@@ -132,7 +132,9 @@ namespace CoHabit.API
                             "https://cohabit-d134fu1op-huyld1504s-projects.vercel.app",
                             "https://cohabit-git-main-huyld1504s-projects.vercel.app",
                             "http://localhost:5173",
-                            "https://localhost:5173"
+                            "https://localhost:5173",
+                            "https://cohabit.vn",
+                            "http://cohabit.vn"
                         )
                             .AllowAnyHeader()
                             .AllowAnyMethod()
