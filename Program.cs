@@ -239,10 +239,9 @@ namespace CoHabit.API
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-            app.UseHttpsRedirection();
-
             // CORS phải được đặt TRƯỚC Authentication/Authorization
             app.UseCors("AllowFrontend");
+            app.UseHttpsRedirection();
 
             app.UseAuthentication();
             app.UseAuthorization();
