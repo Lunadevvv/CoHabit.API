@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   cohabit-api:
     build:
@@ -14,11 +12,32 @@ services:
       # ASP.NET Core
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
-    
+
     restart: unless-stopped
     networks:
       - cohabit-network
 
+
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - cohabit-network
+
+
+
 networks:
   cohabit-network:
     driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
