@@ -60,7 +60,7 @@ namespace CoHabit.API
             });
 
             builder.Services.AddDbContext<CoHabitDbContext>(options =>
-                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseNpgsql(Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")));
 
             builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
                 {
@@ -93,12 +93,12 @@ namespace CoHabit.API
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true,
-                        ValidIssuer = builder.Configuration["JwtOptions:Issuer"],
+                        ValidIssuer = Environment.GetEnvironmentVariable("JwtOptions__Issuer"),
                         ValidateAudience = true,
-                        ValidAudience = builder.Configuration["JwtOptions:Audience"],
+                        ValidAudience = Environment.GetEnvironmentVariable("JwtOptions__Audience"),
                         ValidateLifetime = true,
                         IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(builder.Configuration["JwtOptions:Secret"]!)),
+                            Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JwtOptions__Secret")!)),
                         ValidateIssuerSigningKey = true
                     };
                     options.Events = new JwtBearerEvents
@@ -171,28 +171,25 @@ namespace CoHabit.API
             builder.Services.AddScoped<IMessageRepository, MessageRepository>();
             builder.Services.AddScoped<IChatService, ChatService>();
 
-            // PayOS configuration and HttpClient
-            builder.Services.Configure<PayOSConfig>(builder.Configuration.GetSection("PayOS"));
+            // PayOS HttpClient
             builder.Services.AddHttpClient("payos", client =>
             {
-                client.BaseAddress = new Uri(builder.Configuration["PayOS:BaseUrl"] ?? "https://api-merchant.payos.vn/");
+                client.BaseAddress = new Uri(Environment.GetEnvironmentVariable("PayOS__BaseUrl") ?? "https://api-merchant.payos.vn/");
                 client.Timeout = TimeSpan.FromSeconds(30);
             });
 
-            // Brevo configuration and HttpClient
-            builder.Services.Configure<BrevoConfig>(builder.Configuration.GetSection("Brevo"));
+            // Brevo HttpClient
             builder.Services.AddHttpClient("brevo", client =>
             {
-                client.BaseAddress = new Uri(builder.Configuration["Brevo:BaseUrl"] ?? "https://api.brevo.com/v3/");
+                client.BaseAddress = new Uri(Environment.GetEnvironmentVariable("Brevo__BaseUrl") ?? "https://api.brevo.com/v3/");
                 client.Timeout = TimeSpan.FromSeconds(30);
             });
 
             // Cloudinary configuration
-            builder.Services.Configure<CloudinaryConfig>(builder.Configuration.GetSection("Cloudinary"));
             var cloudinaryAccount = new Account(
-                builder.Configuration["Cloudinary:CloudName"],
-                builder.Configuration["Cloudinary:ApiKey"],
-                builder.Configuration["Cloudinary:ApiSecret"]
+                Environment.GetEnvironmentVariable("Cloudinary__CloudName"),
+                Environment.GetEnvironmentVariable("Cloudinary__ApiKey"),
+                Environment.GetEnvironmentVariable("Cloudinary__ApiSecret")
             );
 
             var cloudinary = new Cloudinary(cloudinaryAccount);

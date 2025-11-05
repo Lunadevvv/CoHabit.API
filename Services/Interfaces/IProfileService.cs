@@ -14,8 +14,5 @@ namespace CoHabit.API.Services.Interfaces
         Task UpdateUserProfileAsync(Guid userId, ProfileRequest profile);
         Task<List<CharacteristicResponse>> GetUserCharacteristicsByUserIdAsync(Guid userId);
         Task UpdateUserCharacteristics(Guid userId, List<string> characteristicIds);
-        Task<List<Post>> GetFavoritePostsByUserIdAsync(Guid userId);
-        Task AddPostToFavoritesAsync(Guid userId, Guid postId);
-        Task RemovePostFromFavoritesAsync(Guid userId, Guid postId);
     }
 }

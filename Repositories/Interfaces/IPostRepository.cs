@@ -19,6 +19,9 @@ namespace CoHabit.API.Repositories.Interfaces
         Task<Post?> GetPostByIdAsync(Guid id);
         void CreatePostAsync(Post post);
         void UpdatePostAsync(Post post);
+        Task<List<Post>> GetFavoritePostsByUserIdAsync(Guid userId);
+        Task<int> AddPostToFavoritesAsync(User user, Post post);
+        Task<int> RemovePostFromFavoritesAsync(User user, Post post);
         Task<int> SaveChangesAsync();
     }
 }

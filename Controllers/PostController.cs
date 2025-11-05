@@ -28,7 +28,6 @@ namespace CoHabit.API.Controllers
 
         //API lấy tất cả bài viết với phân trang cho user
         [HttpGet]
-        [Authorize]
         public async Task<ActionResult<PaginationResponse<List<PostResponse>>>> GetAllPosts(int currentPage, int pageSize)
         {
             try
@@ -305,6 +304,71 @@ namespace CoHabit.API.Controllers
             {
                 var feedbacks = await _postFeedbackService.GetPostFeedbacksByPostIdAsync(postId);
                 return Ok(ApiResponse<List<PostFeedback>>.SuccessResponse(feedbacks.ToList(), "Post feedbacks retrieved successfully."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        //API lấy post favorites của user
+        [HttpGet("favorites")]
+        [Authorize]
+        public async Task<ActionResult<List<PostResponse>>> GetFavoritePosts()
+        {
+            try
+            {
+                var userId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
+                    ? parsedUserId
+                    : throw new Exception("Invalid user ID");
+                var favoritePosts = await _postService.GetFavoritePostsByUserIdAsync(userId);
+                return Ok(ApiResponse<List<PostResponse>>.SuccessResponse(favoritePosts, "Favorite posts retrieved successfully."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        //API thêm post vào favorites
+        [HttpPost("favorites/{postId}")]
+        [Authorize]
+        public async Task<ActionResult> AddPostToFavorites(Guid postId)
+        {
+            try
+            {
+                var userId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
+                    ? parsedUserId
+                    : throw new Exception("Invalid user ID");
+                var result = await _postService.AddPostToFavoritesAsync(userId, postId);
+                if (result == 0)
+                {
+                    return BadRequest(ApiResponse<object>.ErrorResponse("Failed to add post to favorites."));
+                }
+                return Ok(ApiResponse<object>.SuccessResponse(new { }, "Post added to favorites successfully."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        //API xóa post khỏi favorites
+        [HttpDelete("favorites/{postId}")]
+        [Authorize]
+        public async Task<ActionResult> RemovePostFromFavorites(Guid postId)
+        {
+            try
+            {
+                var userId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
+                    ? parsedUserId
+                    : throw new Exception("Invalid user ID");
+                var result = await _postService.RemovePostFromFavoritesAsync(userId, postId);
+                if (result == 0)
+                {
+                    return BadRequest(ApiResponse<object>.ErrorResponse("Failed to remove post from favorites."));
+                }
+                return Ok(ApiResponse<object>.SuccessResponse(new { }, "Post removed from favorites successfully."));
             }
             catch (Exception ex)
             {

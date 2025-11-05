@@ -43,6 +43,7 @@ namespace CoHabit.API.Repositories.Implements
                 .Include(p => p.Furnitures)
                 .Include(p => p.User)
                 .Include(p => p.PostImages)
+                .Include(p => p.LikedByUsers)
                 .AsSplitQuery()
                 .FirstOrDefaultAsync(p => p.PostId == id);
         }
@@ -142,6 +143,28 @@ namespace CoHabit.API.Repositories.Implements
                 TotalPages = totalPages,
                 Items = items
             } ?? new PaginationResponse<List<Post>> { Items = new List<Post>() };
+        }
+
+        public async Task<List<Post>> GetFavoritePostsByUserIdAsync(Guid userId)
+        {
+            return await _context.Posts
+                .Where(p => p.LikedByUsers.Any(u => u.Id == userId))
+                .Include(p => p.PostImages)
+                .ToListAsync();
+        }
+
+        public async Task<int> AddPostToFavoritesAsync(User user, Post post)
+        {
+            post.LikedByUsers.Add(user);
+            _context.Posts.Update(post);
+            return await _context.SaveChangesAsync();
+        }
+
+        public async Task<int> RemovePostFromFavoritesAsync(User user, Post post)
+        {
+            post.LikedByUsers.Remove(user);
+            _context.Posts.Update(post);
+            return await _context.SaveChangesAsync();
         }
     }
 }

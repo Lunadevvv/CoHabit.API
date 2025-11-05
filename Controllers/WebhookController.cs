@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using CoHabit.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using CoHabit.API.Helpers;
 using CoHabit.API.Enitites;
 using CoHabit.API.Enums;
@@ -18,17 +17,15 @@ namespace CoHabit.API.Controllers
     public class WebhookController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
-        private readonly IOptions<PayOSConfig> _payosConfig;
         private readonly IPayOSService _payOSService;
         private readonly ILogger<WebhookController> _logger;
         private readonly IAuthService _authService;
         private readonly ISubcriptionService _subcriptionService;
         private readonly IUserSubcriptionService _userSubcriptionService;
-        public WebhookController(IPaymentService paymentService, IOptions<PayOSConfig> payosConfig, IPayOSService payOSService, ILogger<WebhookController> logger, IAuthService authService, ISubcriptionService subcriptionService, IUserSubcriptionService userSubcriptionService)
+        public WebhookController(IPaymentService paymentService, IPayOSService payOSService, ILogger<WebhookController> logger, IAuthService authService, ISubcriptionService subcriptionService, IUserSubcriptionService userSubcriptionService)
         {
             _logger = logger;
             _paymentService = paymentService;
-            _payosConfig = payosConfig;
             _payOSService = payOSService;
             _authService = authService;
             _subcriptionService = subcriptionService;
@@ -48,7 +45,6 @@ namespace CoHabit.API.Controllers
             if (!root.TryGetProperty("signature", out var signatureElem))
                 return BadRequest("Missing signature");
             var signature = signatureElem.GetString();
-            var checksumKey = _payosConfig.Value.ChecksumKey ?? string.Empty;
 
             // Extract data element and compute HMAC over its canonical JSON
             if (!root.TryGetProperty("data", out var dataElem))

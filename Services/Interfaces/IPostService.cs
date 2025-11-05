@@ -22,5 +22,8 @@ namespace CoHabit.API.Services.Interfaces
         Task<int> UpdatePostAsync(PostRequest req, Guid postId);
         Task<int> UpdatePostStatusAsync(Guid postId, PostStatus status);
         Task<int> UpdateFurnitureInPostAsync(Guid postId, List<string> furnitureIds);
+        Task<List<PostResponse>> GetFavoritePostsByUserIdAsync(Guid userId);
+        Task<int> AddPostToFavoritesAsync(Guid userId, Guid postId);
+        Task<int> RemovePostFromFavoritesAsync(Guid userId, Guid postId);
     }
 }

@@ -327,5 +327,75 @@ namespace CoHabit.API.Services.Implements
 
             return response;
         }
+
+        public async Task<List<PostResponse>> GetFavoritePostsByUserIdAsync(Guid userId)
+        {
+            var posts = await _postRepository.GetFavoritePostsByUserIdAsync(userId);
+            var postResponses = posts.Select(p => new PostResponse
+            {
+                PostId = p.PostId,
+                Title = p.Title,
+                Description = p.Description,
+                Price = p.Price,
+                Address = p.Address,
+                Condition = p.Condition,
+                DepositPolicy = p.DepositPolicy,
+                Status = p.Status,
+                User = p.User != null ? new UserResponse
+                (
+                    p.User.Id,
+                    p.User.FirstName,
+                    p.User.LastName,
+                    p.User.PhoneNumber,
+                    p.User.Image
+                ) : null,
+                ImageUrl = p.PostImages != null ? p.PostImages.Select(img => img.ImageUrl).ToList() : new List<string>(),
+                Furnitures = null,
+                AverageRating = p.AverageRating
+            }).ToList();
+
+            return postResponses;
+        }
+
+        public async Task<int> AddPostToFavoritesAsync(Guid userId, Guid postId)
+        {
+            var user = await _authRepository.GetUserByIdAsync(userId);
+            if (user == null)
+                throw new Exception("User Not Found!");
+
+            var post = await _postRepository.GetPostByIdAsync(postId);
+
+            if (post == null)
+                throw new Exception("Post Not Found!");
+
+            if (user.FavoritePosts == null)
+            {
+                user.FavoritePosts = new List<Post>();
+            }
+            else if (user.FavoritePosts.Any(p => p.PostId == postId))
+            {
+                throw new Exception("Post already in favorites");
+            }
+            else if (post.UserId == userId)
+            {
+                throw new Exception("Cannot add your own post to favorites");
+            }
+
+            return await _postRepository.AddPostToFavoritesAsync(user, post);
+        }
+
+        public async Task<int> RemovePostFromFavoritesAsync(Guid userId, Guid postId)
+        {
+            var user = await _authRepository.GetUserByIdAsync(userId);
+            if (user == null)
+                throw new Exception("User Not Found!");
+
+            var post = await _postRepository.IsPostInFavoritesAsync(userId, postId);
+
+            if (post == null)
+                throw new Exception("Post Not Found!");
+            
+            return await _postRepository.RemovePostFromFavoritesAsync(user, post);
+        }
     }
 }

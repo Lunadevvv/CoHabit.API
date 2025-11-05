@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   cohabit-api:
     build:
@@ -6,38 +8,42 @@ services:
     container_name: cohabit-api
     ports:
       - "8080:8080"
-    env_file:
-      - .env
     environment:
+      # Database
+      - ConnectionStrings__DefaultConnection=${ConnectionStrings__DefaultConnection}
+      
+      # JWT
+      - JwtOptions__Secret=${JwtOptions__Secret}
+      - JwtOptions__Issuer=${JwtOptions__Issuer}
+      - JwtOptions__Audience=${JwtOptions__Audience}
+      - JwtOptions__ExpirationInMinutes=${JwtOptions__ExpirationInMinutes}
+      - JwtOptions__RefreshTokenExpirationInDays=${JwtOptions__RefreshTokenExpirationInDays}
+      
+      # PayOS
+      - PayOS__ClientId=${PayOS__ClientId}
+      - PayOS__ApiKey=${PayOS__ApiKey}
+      - PayOS__ChecksumKey=${PayOS__ChecksumKey}
+      - PayOS__BaseUrl=${PayOS__BaseUrl}
+      - PayOS__ReturnUrl=${PayOS__ReturnUrl}
+      - PayOS__CancelUrl=${PayOS__CancelUrl}
+      
+      # Cloudinary
+      - Cloudinary__CloudName=${Cloudinary__CloudName}
+      - Cloudinary__ApiKey=${Cloudinary__ApiKey}
+      - Cloudinary__ApiSecret=${Cloudinary__ApiSecret}
+      
+      # Brevo
+      - Brevo__BaseUrl=${Brevo__BaseUrl}
+      - Brevo__ApiKey=${Brevo__ApiKey}
+      
       # ASP.NET Core
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
-
+    
     restart: unless-stopped
     networks:
       - cohabit-network
-
-
-  caddy:
-    image: caddy:latest
-    container_name: caddy
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    networks:
-      - cohabit-network
-
-
 
 networks:
   cohabit-network:
     driver: bridge
-
-volumes:
-  caddy_data:
-  caddy_config:
