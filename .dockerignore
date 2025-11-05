@@ -5,5 +5,6 @@
 **/.git
 **/.gitignore
 **/*.md
+**/.env
 **/appsettings.Development.json
 **/appsettings.json
