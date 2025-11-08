@@ -99,6 +99,8 @@ namespace CoHabit.API.Repositories.Implements
         {
             return await _context.Posts
                 .Include(p => p.PostImages)
+                .Include(p => p.LikedByUsers)
+                .AsSplitQuery()
                 .Where(p => p.PostId == postId && p.LikedByUsers.Any(u => u.Id == userId))
                 .FirstOrDefaultAsync();
         }
