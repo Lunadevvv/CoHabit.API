@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CoHabit.API.DTOs.Responses;
 using CoHabit.API.Enitites;
 using CoHabit.API.Repositories.Interfaces;
 using CoHabit.API.Services.Interfaces;
@@ -51,9 +52,9 @@ namespace CoHabit.API.Services.Implements
             return await _postFeedbackRepository.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<PostFeedback>> GetPostFeedbacksByPostIdAsync(Guid postId)
+        public async Task<PaginationResponse<IEnumerable<PostFeedbackResponse>>> GetPostFeedbacksByPostIdAsync(Guid postId, int currentPage, int pageSize, double? averageRating)
         {
-            return await _postFeedbackRepository.GetPostFeedbacksByPostIdAsync(postId);
+            return await _postFeedbackRepository.GetPostFeedbacksPagingByPostIdAsync(postId, currentPage, pageSize, averageRating);
         }
 
         public async Task<bool> IsUserAlreadyFeedbackByPostId(Guid userId, Guid postId)

@@ -44,16 +44,16 @@ namespace CoHabit.API.Controllers
         //API Lấy tất cả bài viết theo thông tin filter
         [HttpGet("search")]
         [Authorize(Roles = "Admin, Moderator, PlusMember, ProMember")]
-        public Task<ActionResult<PaginationResponse<List<PostResponse>>>> SearchPostsWithPagination(int currentPage, int pageSize, string? address, int? maxPrice, double? averageRating)
+        public async Task<ActionResult<PaginationResponse<List<PostResponse>>>> SearchPostsWithPagination(int currentPage, int pageSize, string? address, int? maxPrice, double? averageRating)
         {
             try
             {
-                var posts = _postService.SearchPostsWithPaginationAsync(currentPage, pageSize, address, maxPrice, averageRating);
-                return Task.FromResult<ActionResult<PaginationResponse<List<PostResponse>>>>(Ok(ApiResponse<PaginationResponse<List<PostResponse>>>.SuccessResponse(posts.Result, "Posts retrieved successfully.")));
+                var posts = await _postService.SearchPostsWithPaginationAsync(currentPage, pageSize, address, maxPrice, averageRating);
+                return Ok(ApiResponse<PaginationResponse<List<PostResponse>>>.SuccessResponse(posts, "Posts retrieved successfully."));
             }
             catch (Exception ex)
             {
-                return Task.FromResult<ActionResult<PaginationResponse<List<PostResponse>>>>(BadRequest(ex.Message));
+                return BadRequest(ex.Message);
             }
         }
 
@@ -235,7 +235,7 @@ namespace CoHabit.API.Controllers
 
         //API Thêm feedback cho bài viết
         [HttpPost("feedback")]
-        [Authorize]
+        [Authorize(Roles = "Admin, Moderator, PlusMember, ProMember")]
         public async Task<ActionResult> AddPostFeedback([FromBody] PostFeedbackRequest req)
         {
             try
@@ -298,12 +298,12 @@ namespace CoHabit.API.Controllers
         //API lấy tất cả feedback của bài viết
         [HttpGet("feedback/{postId}")]
         [Authorize]
-        public async Task<ActionResult<List<PostFeedback>>> GetPostFeedbacksByPostId(Guid postId)
+        public async Task<ActionResult<PaginationResponse<IEnumerable<PostFeedbackResponse>>>> GetPostFeedbacksByPostId(Guid postId, int currentPage, int pageSize, double? averageRating)
         {
             try
             {
-                var feedbacks = await _postFeedbackService.GetPostFeedbacksByPostIdAsync(postId);
-                return Ok(ApiResponse<List<PostFeedback>>.SuccessResponse(feedbacks.ToList(), "Post feedbacks retrieved successfully."));
+                var feedbacks = await _postFeedbackService.GetPostFeedbacksByPostIdAsync(postId, currentPage, pageSize, averageRating);
+                return Ok(ApiResponse<PaginationResponse<IEnumerable<PostFeedbackResponse>>>.SuccessResponse(feedbacks, "Post feedbacks retrieved successfully."));
             }
             catch (Exception ex)
             {
