@@ -298,11 +298,11 @@ namespace CoHabit.API.Controllers
         //API lấy tất cả feedback của bài viết
         [HttpGet("feedback/{postId}")]
         [Authorize]
-        public async Task<ActionResult<PaginationResponse<IEnumerable<PostFeedbackResponse>>>> GetPostFeedbacksByPostId(Guid postId, int currentPage, int pageSize, double? averageRating)
+        public async Task<ActionResult<PaginationResponse<IEnumerable<PostFeedbackResponse>>>> GetPostFeedbacksByPostId(Guid postId, int currentPage, int pageSize, double? rating)
         {
             try
             {
-                var feedbacks = await _postFeedbackService.GetPostFeedbacksByPostIdAsync(postId, currentPage, pageSize, averageRating);
+                var feedbacks = await _postFeedbackService.GetPostFeedbacksByPostIdAsync(postId, currentPage, pageSize, rating);
                 return Ok(ApiResponse<PaginationResponse<IEnumerable<PostFeedbackResponse>>>.SuccessResponse(feedbacks, "Post feedbacks retrieved successfully."));
             }
             catch (Exception ex)

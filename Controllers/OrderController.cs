@@ -7,6 +7,8 @@ using CoHabit.API.Services.Interfaces;
 using CoHabit.API.DTOs.Requests;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using CoHabit.API.DTOs.Responses;
+using CoHabit.API.Helpers;
 
 namespace CoHabit.API.Controllers
 {
@@ -23,29 +25,37 @@ namespace CoHabit.API.Controllers
 
         [HttpGet("user")]
         [Authorize]
-        public async Task<IActionResult> GetOrdersByUserId()
+        public async Task<ActionResult<List<OrderResponse>>> GetOrdersByUserId()
         {
             var userId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
                     ? parsedUserId
                     : throw new Exception("Invalid user ID");
             var result = await _orderService.GetOrdersByUserIdAsync(userId);
-            return Ok(result);
+            return Ok(ApiResponse<List<OrderResponse>>.SuccessResponse(result, "Orders retrieved successfully."));
         }
 
         [HttpGet("owner")]
         [Authorize]
-        public async Task<IActionResult> GetOrdersByOwnerId()
+        public async Task<ActionResult<List<OrderResponse>>> GetOrdersByOwnerId()
         {
             var ownerId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
                     ? parsedUserId
                     : throw new Exception("Invalid user ID");
             var result = await _orderService.GetOrdersByOwnerIdAsync(ownerId);
-            return Ok(result);
+            return Ok(ApiResponse<List<OrderResponse>>.SuccessResponse(result, "Orders retrieved successfully."));
         }
+
+        // [HttpGet("{postId}")]
+        // [Authorize(Roles = "Admin,Moderator,ProMember")]
+        // public async Task<IActionResult> GetOrdersByPostId(Guid postId)
+        // {
+        //     var result = await _orderService.GetOrdersByPostIdAsync(postId);
+        //     return Ok(result);
+        // }
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> CreateOrder([FromQuery] Guid postId)
+        public async Task<ActionResult> CreateOrder([FromQuery] Guid postId)
         {
             var userId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
                     ? parsedUserId
@@ -58,7 +68,7 @@ namespace CoHabit.API.Controllers
                 return BadRequest("Failed to create order.");
             }
 
-            return Ok("Order created successfully.");
+            return Ok(ApiResponse<string>.SuccessResponse(string.Empty, "Order created successfully."));
         }
 
     }

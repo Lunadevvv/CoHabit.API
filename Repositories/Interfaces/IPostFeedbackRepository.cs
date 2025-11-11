@@ -11,7 +11,7 @@ namespace CoHabit.API.Repositories.Interfaces
     {
         void AddPostFeedbackAsync(PostFeedback postFeedback);
         Task<IEnumerable<PostFeedback>> GetPostFeedbacksByPostIdAsync(Guid postId);
-        Task<PaginationResponse<IEnumerable<PostFeedbackResponse>>> GetPostFeedbacksPagingByPostIdAsync(Guid postId, int currentPage, int pageSize, double? averageRating);
+        Task<PaginationResponse<IEnumerable<PostFeedbackResponse>>> GetPostFeedbacksPagingByPostIdAsync(Guid postId, int currentPage, int pageSize, double? rating);
         void UpdatePostFeedbackAsync(PostFeedback postFeedback);
         Task<PostFeedback?> GetPostFeedbackByIdAsync(Guid postFeedbackId);
         Task<bool> IsUserAlreadyFeedbackByPostId(Guid userId, Guid postId);

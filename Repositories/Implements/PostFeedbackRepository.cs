@@ -37,7 +37,7 @@ namespace CoHabit.API.Repositories.Implements
                 .ToListAsync();
         }
 
-        public async Task<PaginationResponse<IEnumerable<PostFeedbackResponse>>> GetPostFeedbacksPagingByPostIdAsync(Guid postId, int currentPage, int pageSize, double? averageRating)
+        public async Task<PaginationResponse<IEnumerable<PostFeedbackResponse>>> GetPostFeedbacksPagingByPostIdAsync(Guid postId, int currentPage, int pageSize, double? rating)
         {
             var query = _context.PostFeedbacks
                 .Include(pf => pf.User)
@@ -46,9 +46,9 @@ namespace CoHabit.API.Repositories.Implements
                 .Where(pf => pf.PostId == postId && !pf.IsDeleted)
                 .AsQueryable();
 
-            if (averageRating.HasValue)
+            if (rating.HasValue)
             {
-                query = query.Where(pf => pf.Rating == averageRating.Value);
+                query = query.Where(pf => pf.Rating == rating.Value);
             }
 
             var totalItems = await query.CountAsync();
