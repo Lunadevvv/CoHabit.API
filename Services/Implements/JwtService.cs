@@ -18,18 +18,16 @@ namespace CoHabit.API.Services.Implements
     public class JwtService : IJwtService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public readonly IConfiguration _configuration;
         private readonly IAuthRepository _authRepository;
-        public JwtService(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IAuthRepository authRepository)
+        public JwtService(IHttpContextAccessor httpContextAccessor, IAuthRepository authRepository)
         {
             _authRepository = authRepository;
             _httpContextAccessor = httpContextAccessor;
-            _configuration = configuration;
         }
 
         public (string jwtToken, DateTime expiresAtUtc) GenerateJwtToken(User user, IList<string> roles)
         {
-            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetValue<string>("JwtOptions:Secret")!));
+            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JwtOptions__Secret")!));
 
             var credentials = new SigningCredentials(
                 signingKey,
@@ -43,11 +41,12 @@ namespace CoHabit.API.Services.Implements
 
             claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
-            var expires = DateTime.UtcNow.AddMinutes(_configuration.GetValue<double>("JwtOptions:ExpirationTimeInMinutes"));
+            var expirationMinutes = double.Parse(Environment.GetEnvironmentVariable("JwtOptions__ExpirationInMinutes") ?? "30");
+            var expires = DateTime.UtcNow.AddMinutes(expirationMinutes);
 
             var token = new JwtSecurityToken(
-                issuer: _configuration.GetValue<string>("JwtOptions:Issuer"),
-                audience: _configuration.GetValue<string>("JwtOptions:Audience"),
+                issuer: Environment.GetEnvironmentVariable("JwtOptions__Issuer"),
+                audience: Environment.GetEnvironmentVariable("JwtOptions__Audience"),
                 claims: claims,
                 expires: expires,
                 signingCredentials: credentials);
@@ -62,7 +61,7 @@ namespace CoHabit.API.Services.Implements
             DateTime expiration)
         {
             //thêm mới cookie hoac cập nhật cookie nếu đã tồn tại
-            _httpContextAccessor.HttpContext.Response.Cookies.Append(cookieName,
+            _httpContextAccessor.HttpContext?.Response.Cookies.Append(cookieName,
                 token, new CookieOptions
                 {
                     HttpOnly = true, // ngăn javascript truy cập cookie này
@@ -79,7 +78,8 @@ namespace CoHabit.API.Services.Implements
             using var rng = RandomNumberGenerator.Create();
             rng.GetBytes(randomNumber);
             var refreshToken = Convert.ToBase64String(randomNumber);
-            var expiresAtUtc = DateTime.UtcNow.AddDays(_configuration.GetValue<double>("JwtOptions:RefreshTokenExpirationInDays"));
+            var refreshTokenExpirationDays = double.Parse(Environment.GetEnvironmentVariable("JwtOptions__RefreshTokenExpirationInDays") ?? "7");
+            var expiresAtUtc = DateTime.UtcNow.AddDays(refreshTokenExpirationDays);
             return (refreshToken, expiresAtUtc);
         }
     }

@@ -10,7 +10,6 @@ using CoHabit.API.Helpers;
 using CoHabit.API.Repositories.Interfaces;
 using CoHabit.API.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 
 namespace CoHabit.API.Services.Implements
 {
@@ -20,10 +19,8 @@ namespace CoHabit.API.Services.Implements
         private readonly IAuthRepository _authRepository;
         private readonly UserManager<User> _userManager;
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly BrevoConfig _config;
-        public OtpService(IOtpRepository otpRepository, IAuthRepository authRepository, UserManager<User> userManager, IHttpClientFactory httpClientFactory, IOptions<BrevoConfig> config)
+        public OtpService(IOtpRepository otpRepository, IAuthRepository authRepository, UserManager<User> userManager, IHttpClientFactory httpClientFactory)
         {
-            _config = config.Value;
             _httpClientFactory = httpClientFactory;
             _otpRepository = otpRepository;
             _authRepository = authRepository;
@@ -88,7 +85,8 @@ namespace CoHabit.API.Services.Implements
             try
             {
                 var client = _httpClientFactory.CreateClient("brevo");
-                client.DefaultRequestHeaders.Add("api-key", _config.ApiKey ?? throw new Exception("Brevo API key is not configured."));
+                var brevoApiKey = Environment.GetEnvironmentVariable("Brevo__ApiKey") ?? throw new Exception("Brevo API key is not configured.");
+                client.DefaultRequestHeaders.Add("api-key", brevoApiKey);
                 var emailContent = new
                 {
                     sender = new { email = "cohabit.vn@gmail.com" },

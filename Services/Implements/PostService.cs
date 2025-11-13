@@ -16,18 +16,57 @@ namespace CoHabit.API.Services.Implements
         private readonly IPostRepository _postRepository;
         private readonly IAuthRepository _authRepository;
         private readonly IFurnitureRepository _furnitureRepository;
-        public PostService(IPostRepository postRepository, IAuthRepository authRepository, IFurnitureRepository furnitureRepository)
+        private readonly ICloudinaryService _cloudinaryService;
+        private readonly ILogger<PostService> _logger;
+        public PostService(IPostRepository postRepository, IAuthRepository authRepository,
+        IFurnitureRepository furnitureRepository, ICloudinaryService cloudinaryService,
+        ILogger<PostService> logger)
         {
             _furnitureRepository = furnitureRepository;
             _authRepository = authRepository;
             _postRepository = postRepository;
+            _cloudinaryService = cloudinaryService;
+            _logger = logger;
         }
 
-        public async Task<PaginationResponse<List<Post>>> GetPostsAsync(int CurrentPage, int pageSize)
+        public async Task<PaginationResponse<List<PostResponse>>> GetPostsAsync(int CurrentPage, int pageSize)
         {
             var result = await _postRepository.GetPostsAsync(CurrentPage, pageSize);
+
             // Map Post to PostResponse
-            return result;
+            var postResponses = result.Items.Select(p => new PostResponse
+            {
+                PostId = p.PostId,
+                Title = p.Title,
+                Description = p.Description,
+                Price = p.Price,
+                Address = p.Address,
+                Condition = p.Condition,
+                DepositPolicy = p.DepositPolicy,
+                Status = p.Status,
+                User = p.User != null ? new UserResponse
+                (
+                    p.User.Id,
+                    p.User.FirstName,
+                    p.User.LastName,
+                    p.User.PhoneNumber,
+                    p.User.Image
+                ) : null,
+                ImageUrl = p.PostImages != null ? p.PostImages.Select(img => img.ImageUrl).ToList() : new List<string>(),
+                Furnitures = null,
+                AverageRating = p.AverageRating
+            }).ToList();
+
+            var response = new PaginationResponse<List<PostResponse>>
+            {
+                Items = postResponses,
+                CurrentPage = result.CurrentPage,
+                TotalPages = result.TotalPages,
+                PageSize = result.PageSize,
+                TotalCount = result.TotalCount
+            };
+
+            return response;
         }
         public async Task<List<PostResponse>> GetAllPostsAsync()
         {
@@ -50,7 +89,9 @@ namespace CoHabit.API.Services.Implements
                     p.User.PhoneNumber,
                     p.User.Image
                 ) : null,
-                Furnitures = null
+                ImageUrl = p.PostImages != null ? p.PostImages.Select(img => img.ImageUrl).ToList() : new List<string>(),
+                Furnitures = null,
+                AverageRating = p.AverageRating
             }).ToList();
             return postResponses;
         }
@@ -60,15 +101,65 @@ namespace CoHabit.API.Services.Implements
             throw new NotImplementedException();
         }
 
-        public async Task<List<Post>> GetAllPostsByUserAsync(Guid userId)
+        public async Task<List<PostResponse>> GetAllPostsByUserAsync(Guid userId)
         {
-            return await _postRepository.GetAllPostsByUserAsync(userId);
+            var posts = await _postRepository.GetAllPostsByUserAsync(userId);
+
+            var postResponses = posts.Select(p => new PostResponse
+            {
+                PostId = p.PostId,
+                Title = p.Title,
+                Description = p.Description,
+                Price = p.Price,
+                Address = p.Address,
+                Condition = p.Condition,
+                DepositPolicy = p.DepositPolicy,
+                Status = p.Status,
+                User = p.User != null ? new UserResponse
+                (
+                    p.User.Id,
+                    p.User.FirstName,
+                    p.User.LastName,
+                    p.User.PhoneNumber,
+                    p.User.Image
+                ) : null,
+                ImageUrl = p.PostImages != null ? p.PostImages.Select(img => img.ImageUrl).ToList() : new List<string>(),
+                Furnitures = null,
+                AverageRating = p.AverageRating
+            }).ToList();
+
+            return postResponses;
         }
 
-        public async Task<List<Post>> GetAllPublishPostsByUserAsync(Guid userId)
+        public async Task<List<PostResponse>> GetAllPublishPostsByUserAsync(Guid userId)
         {
-            var result = await _postRepository.GetAllPostsByUserAsync(userId);
-            return result.Where(p => p.Status == PostStatus.Publish).ToList();
+            var posts = await _postRepository.GetAllPostsByUserAsync(userId);
+            var publishPosts = posts.Where(p => p.Status == PostStatus.Publish).ToList();
+
+            var postResponses = publishPosts.Select(p => new PostResponse
+            {
+                PostId = p.PostId,
+                Title = p.Title,
+                Description = p.Description,
+                Price = p.Price,
+                Address = p.Address,
+                Condition = p.Condition,
+                DepositPolicy = p.DepositPolicy,
+                Status = p.Status,
+                User = p.User != null ? new UserResponse
+                (
+                    p.User.Id,
+                    p.User.FirstName,
+                    p.User.LastName,
+                    p.User.PhoneNumber,
+                    p.User.Image
+                ) : null,
+                ImageUrl = p.PostImages != null ? p.PostImages.Select(img => img.ImageUrl).ToList() : new List<string>(),
+                Furnitures = null,
+                AverageRating = p.AverageRating
+            }).ToList();
+
+            return postResponses;
         }
 
         public async Task<PostResponse?> GetPostByIdAsync(Guid id)
@@ -94,7 +185,9 @@ namespace CoHabit.API.Services.Implements
                     post.User.PhoneNumber,
                     post.User.Image
                 ) : null,
-                Furnitures = post.Furnitures?.Select(f => new FurnitureResponse(f.FurId, f.Name)).ToList()
+                ImageUrl = post.PostImages != null ? post.PostImages.Select(img => img.ImageUrl).ToList() : new List<string>(),
+                Furnitures = post.Furnitures?.Select(f => new FurnitureResponse(f.FurId, f.Name)).ToList(),
+                AverageRating = post.AverageRating
             };
             return postResponse;
         }
@@ -103,6 +196,7 @@ namespace CoHabit.API.Services.Implements
         {
             var user = await _authRepository.GetUserByIdAsync(userId);
             if (user == null) return 0;
+
             var newPost = new Post
             {
                 PostId = Guid.NewGuid(),
@@ -113,10 +207,39 @@ namespace CoHabit.API.Services.Implements
                 Condition = req.Condition,
                 DepositPolicy = req.DepositPolicy,
                 Status = PostStatus.Pending,
-                UserId = userId,
-                User = user,
-                Furnitures = null
+                UserId = userId
             };
+
+            //Upload Images here if any
+            if (req.Images != null && req.Images.Any())
+            {
+                try
+                {
+                    var uploadResults = await _cloudinaryService.UploadMultipleImagesAsync(req.Images);
+
+                    var postImages = uploadResults.Select((result, index) => new PostImage
+                    {
+                        PostId = newPost.PostId,
+                        ImageUrl = result.Url
+                    }).ToList();
+
+                    newPost.PostImages = postImages;
+                }
+                catch (Exception ex)
+                {
+                    // Log the error
+                    _logger.LogError($"Cloudinary upload error: {ex.Message}");
+                }
+            }
+            
+            //Add Furnitures if any
+            if (req.FurnitureIds != null && req.FurnitureIds.Any())
+            {
+                var furnitures = await _furnitureRepository.GetFurnituresAsync();
+                var selectedFurnitures = furnitures.Where(f => req.FurnitureIds.Contains(f.FurId)).ToList();
+                newPost.Furnitures = selectedFurnitures;
+            }
+
             _postRepository.CreatePostAsync(newPost);
             var result = await _postRepository.SaveChangesAsync();
             return result;
@@ -163,6 +286,116 @@ namespace CoHabit.API.Services.Implements
             _postRepository.UpdatePostAsync(post);
             return await _postRepository.SaveChangesAsync();
 
+        }
+
+        public async Task<PaginationResponse<List<PostResponse>>> SearchPostsWithPaginationAsync(int currentPage, int pageSize, string? address, int? maxPrice, double? averageRating)
+        {
+            var result = await _postRepository.SearchPostsWithPaginationAsync(currentPage, pageSize, address, maxPrice, averageRating);
+
+            // Map Post to PostResponse
+            var postResponses = result.Items.Select(p => new PostResponse
+            {
+                PostId = p.PostId,
+                Title = p.Title,
+                Description = p.Description,
+                Price = p.Price,
+                Address = p.Address,
+                Condition = p.Condition,
+                DepositPolicy = p.DepositPolicy,
+                Status = p.Status,
+                User = p.User != null ? new UserResponse
+                (
+                    p.User.Id,
+                    p.User.FirstName,
+                    p.User.LastName,
+                    p.User.PhoneNumber,
+                    p.User.Image
+                ) : null,
+                ImageUrl = p.PostImages != null ? p.PostImages.Select(img => img.ImageUrl).ToList() : new List<string>(),
+                Furnitures = null,
+                AverageRating = p.AverageRating
+            }).ToList();
+
+            var response = new PaginationResponse<List<PostResponse>>
+            {
+                Items = postResponses,
+                CurrentPage = result.CurrentPage,
+                TotalPages = result.TotalPages,
+                PageSize = result.PageSize,
+                TotalCount = result.TotalCount
+            };
+
+            return response;
+        }
+
+        public async Task<List<PostResponse>> GetFavoritePostsByUserIdAsync(Guid userId)
+        {
+            var posts = await _postRepository.GetFavoritePostsByUserIdAsync(userId);
+            var postResponses = posts.Select(p => new PostResponse
+            {
+                PostId = p.PostId,
+                Title = p.Title,
+                Description = p.Description,
+                Price = p.Price,
+                Address = p.Address,
+                Condition = p.Condition,
+                DepositPolicy = p.DepositPolicy,
+                Status = p.Status,
+                User = p.User != null ? new UserResponse
+                (
+                    p.User.Id,
+                    p.User.FirstName,
+                    p.User.LastName,
+                    p.User.PhoneNumber,
+                    p.User.Image
+                ) : null,
+                ImageUrl = p.PostImages != null ? p.PostImages.Select(img => img.ImageUrl).ToList() : new List<string>(),
+                Furnitures = null,
+                AverageRating = p.AverageRating
+            }).ToList();
+
+            return postResponses;
+        }
+
+        public async Task<int> AddPostToFavoritesAsync(Guid userId, Guid postId)
+        {
+            var user = await _authRepository.GetUserByIdAsync(userId);
+            if (user == null)
+                throw new Exception("User Not Found!");
+
+            var post = await _postRepository.GetPostByIdAsync(postId);
+
+            if (post == null)
+                throw new Exception("Post Not Found!");
+
+            if (user.FavoritePosts == null)
+            {
+                user.FavoritePosts = new List<Post>();
+            }
+            else if (user.FavoritePosts.Any(p => p.PostId == postId))
+            {
+                throw new Exception("Post already in favorites");
+            }
+            else if (post.UserId == userId)
+            {
+                throw new Exception("Cannot add your own post to favorites");
+            }
+
+            return await _postRepository.AddPostToFavoritesAsync(user, post);
+        }
+
+        public async Task<int> RemovePostFromFavoritesAsync(Guid userId, Guid postId)
+        {
+            var user = await _authRepository.GetUserByIdAsync(userId);
+            if (user == null)
+                throw new Exception("User Not Found!");
+
+            var post = await _postRepository.IsPostInFavoritesAsync(userId, postId);
+
+            if (post == null)
+                throw new Exception("Post Not Found!");
+            
+            return await _postRepository.RemovePostFromFavoritesAsync(user, post);
         }
     }
 }

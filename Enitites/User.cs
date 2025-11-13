@@ -25,5 +25,19 @@ namespace CoHabit.API.Enitites
         public virtual ICollection<Post>? FavoritePosts { get; set; }
         [JsonIgnore]
         public virtual ICollection<Order>? Orders { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<UserSubcription>? UserSubcriptions { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<PostFeedback>? PostFeedbacks { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<UserFeedback>? SentFeedbacks { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<UserFeedback>? ReceivedFeedbacks { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Conversation>? OwnedConversations { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Conversation>? InterestedConversations { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Message>? SentMessages { get; set; }
     }
 }

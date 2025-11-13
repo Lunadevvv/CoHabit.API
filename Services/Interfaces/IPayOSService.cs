@@ -8,7 +8,7 @@ namespace CoHabit.API.Services.Interfaces
     public interface IPayOSService
     {
         Task<CreatePaymentLinkResponse> CreatePaymentLinkAsync(CreatePaymentRequest request, int orderCode);
-        ReturnURLQueryResponse GetPaymentInfo(IQueryCollection query);
+        // ReturnURLQueryResponse GetPaymentInfo(IQueryCollection query);
         bool VerifyWebhookSignature(string dataJson, string signature);
     }
 }

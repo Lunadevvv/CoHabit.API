@@ -39,7 +39,8 @@ namespace CoHabit.API.Services.Implements
                 user.PhoneNumber ?? string.Empty,
                 user.Yob,
                 user.Sex.ToString(),
-                user.Image
+                user.Image,
+                (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "BasicMember"
             );
         }
 
@@ -82,52 +83,6 @@ namespace CoHabit.API.Services.Implements
             user.Image = profile.Image;
 
             await _userManager.UpdateAsync(user);
-        }
-
-        public async Task<List<Post>> GetFavoritePostsByUserIdAsync(Guid userId)
-        {
-            return await _authRepository.GetFavoritePostsByUserIdAsync(userId) ?? new List<Post>();
-        }
-
-        public async Task AddPostToFavoritesAsync(Guid userId, Guid postId)
-        {
-            var user = await _authRepository.GetUserByIdAsync(userId);
-            if (user == null)
-                throw new Exception("User Not Found!");
-
-            var post = await _postRepository.GetPostByIdAsync(postId);
-
-            if (post == null)
-                throw new Exception("Post Not Found!");
-
-            if (user.FavoritePosts == null)
-            {
-                user.FavoritePosts = new List<Post>();
-            }
-            else if (user.FavoritePosts.Any(p => p.PostId == postId))
-            {
-                throw new Exception("Post already in favorites");
-            }
-            else if (post.UserId == userId)
-            {
-                throw new Exception("Cannot add your own post to favorites");
-            }
-
-            await _authRepository.AddFavoritePostAsync(user, post);
-        }
-
-        public async Task RemovePostFromFavoritesAsync(Guid userId, Guid postId)
-        {
-            var user = await _authRepository.GetUserByIdAsync(userId);
-            if (user == null)
-                throw new Exception("User Not Found!");
-
-            var post = await _postRepository.IsPostInFavoritesAsync(userId, postId);
-
-            if (post == null)
-                throw new Exception("Post Not Found!");
-            
-            await _authRepository.RemoveFavoritePostAsync(user, post);
         }
     }
 }

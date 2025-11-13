@@ -13,13 +13,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Net.payOS;
-using Net.payOS.Types;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using CoHabit.API.DTOs.Responses;
+using CoHabit.API.Services.Implements;
 
 namespace CoHabit.API.Controllers
 {
@@ -29,17 +27,19 @@ namespace CoHabit.API.Controllers
     {
         private readonly ILogger<PaymentController> _logger;
         private readonly IPaymentService _paymentService;
-        private readonly IOptions<PayOSConfig> _payOSConfig;
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly IPayOSService _payOSService;
+        private readonly IAuthService _authService;
+        private readonly ISubcriptionService _subcriptionService;
+        private readonly IUserSubcriptionService _userSubcriptionService;
 
-        public PaymentController(ILogger<PaymentController> logger, IPaymentService paymentService, IOptions<PayOSConfig> payOSConfig, IHttpClientFactory httpClientFactory, IPayOSService payOSService)
+        public PaymentController(ILogger<PaymentController> logger, IPaymentService paymentService, IPayOSService payOSService, IAuthService authService, ISubcriptionService subcriptionService, IUserSubcriptionService userSubcriptionService)
         {
-            _payOSConfig = payOSConfig;
             _paymentService = paymentService;
-            _httpClientFactory = httpClientFactory;
             _payOSService = payOSService;
             _logger = logger;
+            _authService = authService;
+            _subcriptionService = subcriptionService;
+            _userSubcriptionService = userSubcriptionService;
         }
 
         [HttpGet("all")]
@@ -81,6 +81,17 @@ namespace CoHabit.API.Controllers
             // get current user id from token
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdStr)) return BadRequest("Invalid user");
+            //Parse userId to Guid
+            var userId = Guid.TryParse(userIdStr, out var parsedUserId)
+                    ? parsedUserId
+                    : throw new Exception("Parse user ID failed");
+
+            //Check if subcription exists
+            var userSubcription = await _userSubcriptionService.GetActiveSubcriptionByUserIdAndSubId(userId, request.SubcriptionId);
+            if (userSubcription != null)
+            {
+                return BadRequest("You already have an active subscription.");
+            }
 
             var paymentId = _paymentService.GeneratePaymentId();
 
@@ -95,9 +106,10 @@ namespace CoHabit.API.Controllers
                 Price = request.Amount,
                 Description = request.Description,
                 Status = PaymentStatus.InProgress,
-                CreatedDate = DateTime.Now,
-                UpdatedDate = DateTime.Now,
-                UserId = Guid.Parse(userIdStr)
+                CreatedDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow,
+                UserId = userId,
+                SubcriptionId = request.SubcriptionId
             };
 
             await _paymentService.CreatePayment(payment, userIdStr);
@@ -109,39 +121,23 @@ namespace CoHabit.API.Controllers
             });
         }
 
-        [HttpPatch("update-status")]
-        public async Task<IActionResult> UpdatePaymentStatus()
+        [HttpPatch("update-cancel-status")]
+        public async Task<IActionResult> UpdatePaymentStatus([FromQuery] string paymentLinkId, [FromQuery] string status)
         {
-            if (Request.QueryString.HasValue)
+            //Find payment by paymentLinkId
+            var payment = await _paymentService.GetPaymentByPaymentLinkId(paymentLinkId);
+            if (payment == null)
             {
-                var paymentResult = _payOSService.GetPaymentInfo(Request.Query);
-                if (paymentResult == null || string.IsNullOrEmpty(paymentResult.PaymentLinkId))
-                {
-                    return BadRequest("Invalid payment information");
-                }
-                var payment = await _paymentService.GetPaymentByPaymentLinkId(paymentResult.PaymentLinkId);
-                if (payment == null)
-                {
-                    return NotFound("Payment not found");
-                }
-                // Update payment status based on the status from query
-                if (paymentResult.Status == "PAID")
-                {
-                    payment.Status = PaymentStatus.Success;
-                }
-                else if (paymentResult.Status == "CANCELLED")
-                {
-                    payment.Status = PaymentStatus.Cancelled;
-                }
-                else
-                {
-                    payment.Status = PaymentStatus.InProgress;
-                }
-
-                await _paymentService.UpdatePaymentStatus(payment);
-                return Ok("Payment status updated");
+                return NotFound("Payment not found");
             }
-            return BadRequest("Missing query string");
+            
+            if (status == "CANCELLED")
+            {
+                payment.Status = PaymentStatus.Cancelled;
+            }
+
+            await _paymentService.UpdatePaymentStatus(payment);
+            return Ok("Payment status updated to " + status);
         }
     }
 }

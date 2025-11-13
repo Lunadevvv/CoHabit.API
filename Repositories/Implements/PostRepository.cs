@@ -22,6 +22,8 @@ namespace CoHabit.API.Repositories.Implements
         {
             return await _context.Posts
                 .Include(p => p.User)
+                .Include(p => p.PostImages)
+                .AsSplitQuery()
                 .ToListAsync();
         }
 
@@ -29,6 +31,8 @@ namespace CoHabit.API.Repositories.Implements
         {
             return await _context.Posts
                 .Include(p => p.User)
+                .Include(p => p.PostImages)
+                .AsSplitQuery()
                 .Where(p => p.Status == status)
                 .ToListAsync();
         }
@@ -38,12 +42,18 @@ namespace CoHabit.API.Repositories.Implements
             return await _context.Posts
                 .Include(p => p.Furnitures)
                 .Include(p => p.User)
+                .Include(p => p.PostImages)
+                .Include(p => p.LikedByUsers)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(p => p.PostId == id);
         }
 
         public async Task<PaginationResponse<List<Post>>> GetPostsAsync(int CurrentPage, int pageSize)
         {
             var items = await _context.Posts
+                .Include(p => p.User)
+                .Include(p => p.PostImages)
+                .AsSplitQuery()
                 .Where(p => p.Status == PostStatus.Publish)
                 .ToListAsync();
 
@@ -65,6 +75,7 @@ namespace CoHabit.API.Repositories.Implements
         public async Task<List<Post>> GetAllPostsByUserAsync(Guid userId)
         {
             return await _context.Posts
+                .Include(p => p.PostImages)
                 .Where(p => p.UserId == userId)
                 .ToListAsync();
         }
@@ -87,8 +98,75 @@ namespace CoHabit.API.Repositories.Implements
         public async Task<Post>? IsPostInFavoritesAsync(Guid userId, Guid postId)
         {
             return await _context.Posts
+                .Include(p => p.PostImages)
+                .Include(p => p.LikedByUsers)
+                .AsSplitQuery()
                 .Where(p => p.PostId == postId && p.LikedByUsers.Any(u => u.Id == userId))
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<PaginationResponse<List<Post>>> SearchPostsWithPaginationAsync(int currentPage, int pageSize, string? address, int? maxPrice, double? averageRating)
+        {
+            var query = _context.Posts
+                .Include(p => p.User)
+                .Include(p => p.PostImages)
+                .AsSplitQuery()
+                .Where(p => p.Status == PostStatus.Publish)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(address))
+            {
+                query = query.Where(p => p.Address.Contains(address));
+            }
+
+            if (maxPrice.HasValue)
+            {
+                query = query.Where(p => p.Price <= maxPrice.Value);
+            }
+
+            if (averageRating.HasValue)
+            {
+                query = query.Where(p => p.AverageRating >= averageRating.Value);
+            }
+
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+            var items = await query
+                .Skip((currentPage - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PaginationResponse<List<Post>>
+            {
+                CurrentPage = currentPage,
+                PageSize = pageSize,
+                TotalCount = totalItems,
+                TotalPages = totalPages,
+                Items = items
+            } ?? new PaginationResponse<List<Post>> { Items = new List<Post>() };
+        }
+
+        public async Task<List<Post>> GetFavoritePostsByUserIdAsync(Guid userId)
+        {
+            return await _context.Posts
+                .Where(p => p.LikedByUsers.Any(u => u.Id == userId))
+                .Include(p => p.PostImages)
+                .ToListAsync();
+        }
+
+        public async Task<int> AddPostToFavoritesAsync(User user, Post post)
+        {
+            post.LikedByUsers.Add(user);
+            _context.Posts.Update(post);
+            return await _context.SaveChangesAsync();
+        }
+
+        public async Task<int> RemovePostFromFavoritesAsync(User user, Post post)
+        {
+            post.LikedByUsers.Remove(user);
+            _context.Posts.Update(post);
+            return await _context.SaveChangesAsync();
         }
     }
 }

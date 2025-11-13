@@ -16,6 +16,7 @@ namespace CoHabit.API.Enitites
         public string? Description { get; set; }
         public string? Condition { get; set; }
         public string? DepositPolicy { get; set; }
+        public double AverageRating { get; set; } = 0.0;
         public PostStatus Status { get; set; } = PostStatus.Pending;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -28,5 +29,11 @@ namespace CoHabit.API.Enitites
         public virtual ICollection<User>? LikedByUsers { get; set; }
         [JsonIgnore]
         public virtual ICollection<Order>? Orders { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<PostImage>? PostImages { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<PostFeedback>? PostFeedbacks { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Conversation>? Conversations { get; set; }
     }
 }

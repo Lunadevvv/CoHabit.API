@@ -11,20 +11,17 @@ using CoHabit.API.DTOs.Responses;
 using CoHabit.API.Enitites;
 using CoHabit.API.Helpers;
 using CoHabit.API.Services.Interfaces;
-using Microsoft.Extensions.Options;
 
 namespace CoHabit.API.Services.Implements
 {
     public class PayOSService : IPayOSService
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly PayOSConfig _config;
         private readonly ILogger<PayOSService> _logger;
 
-        public PayOSService(IHttpClientFactory httpClientFactory, IOptions<PayOSConfig> options, ILogger<PayOSService> logger)
+        public PayOSService(IHttpClientFactory httpClientFactory, ILogger<PayOSService> logger)
         {
             _httpClientFactory = httpClientFactory;
-            _config = options.Value;
             _logger = logger;
         }
 
@@ -32,23 +29,30 @@ namespace CoHabit.API.Services.Implements
         {
             var client = _httpClientFactory.CreateClient("payos");
 
-            var signatureData = $"amount={request.Amount}&cancelUrl={request.CancelUrl}&description={request.Description}&orderCode={orderCode}&returnUrl={request.ReturnUrl}";
-            var signature = ComputeHmacSha256(_config.ChecksumKey ?? string.Empty, signatureData);
+            var cancelUrl = Environment.GetEnvironmentVariable("PayOS__CancelUrl") ?? string.Empty;
+            var returnUrl = Environment.GetEnvironmentVariable("PayOS__ReturnUrl") ?? string.Empty;
+            var checksumKey = Environment.GetEnvironmentVariable("PayOS__ChecksumKey") ?? string.Empty;
+            var clientId = Environment.GetEnvironmentVariable("PayOS__ClientId");
+            var apiKey = Environment.GetEnvironmentVariable("PayOS__ApiKey");
+
+            var signatureData = $"amount={request.Amount}&cancelUrl={cancelUrl}&description={request.Description}&orderCode={orderCode}&returnUrl={returnUrl}";
+            var signature = ComputeHmacSha256(checksumKey, signatureData);
 
             var payload = new
             {
                 orderCode = orderCode,
                 amount = request.Amount,
                 description = request.Description,
-                cancelUrl = request.CancelUrl,
-                returnUrl = request.ReturnUrl,
+                cancelUrl = cancelUrl,
+                returnUrl = returnUrl,
+                expiredAt = (int)DateTimeOffset.UtcNow.AddMinutes(5).ToUnixTimeSeconds(),
                 signature = signature
             };
             
             var json = JsonSerializer.Serialize(payload);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            if (!string.IsNullOrEmpty(_config.ClientId)) content.Headers.Add("x-client-id", _config.ClientId);
-            if (!string.IsNullOrEmpty(_config.ApiKey)) content.Headers.Add("x-api-key", _config.ApiKey);
+            if (!string.IsNullOrEmpty(clientId)) content.Headers.Add("x-client-id", clientId);
+            if (!string.IsNullOrEmpty(apiKey)) content.Headers.Add("x-api-key", apiKey);
 
             var res = await client.PostAsync("v2/payment-requests", content);
             var body = await res.Content.ReadAsStringAsync();
@@ -76,7 +80,8 @@ namespace CoHabit.API.Services.Implements
 
         public bool VerifyWebhookSignature(string dataJson, string signature)
         {
-            if (string.IsNullOrEmpty(_config.ChecksumKey))
+            var checksumKey = Environment.GetEnvironmentVariable("PayOS__ChecksumKey");
+            if (string.IsNullOrEmpty(checksumKey))
             {
                 _logger.LogWarning("PayOS checksum key is not configured, cannot verify webhook signature");
                 return false;
@@ -136,7 +141,7 @@ namespace CoHabit.API.Services.Implements
                 _logger.LogInformation("Webhook Signature Data: {SignatureData}", signatureData);
                 _logger.LogInformation("Webhook Expected Signature: {Signature}", signature);
                 
-                var computed = ComputeHmacSha256(_config.ChecksumKey, signatureData);
+                var computed = ComputeHmacSha256(checksumKey, signatureData);
                 _logger.LogInformation("Computed Signature: {Computed}", computed);
                 
                 return computed.Equals(signature, StringComparison.OrdinalIgnoreCase);
@@ -156,15 +161,15 @@ namespace CoHabit.API.Services.Implements
             return BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant();
         }
 
-        public ReturnURLQueryResponse GetPaymentInfo(IQueryCollection query)
-        {
-            var res =
-                new ReturnURLQueryResponse
-                {
-                    PaymentLinkId = query["id"],
-                    Status = query["status"]
-                };
-            return res;
-        }
+        // public ReturnURLQueryResponse GetPaymentInfo(IQueryCollection query)
+        // {
+        //     var res =
+        //         new ReturnURLQueryResponse
+        //         {
+        //             PaymentLinkId = query["id"],
+        //             Status = query["status"]
+        //         };
+        //     return res;
+        // }
     }
 }

@@ -9,8 +9,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Net.payOS;
 using CoHabit.API.Helpers;
+using CloudinaryDotNet;
+using CoHabit.API.Hubs;
 
 namespace CoHabit.API
 {
@@ -20,8 +21,10 @@ namespace CoHabit.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // Load .env file
+            DotNetEnv.Env.Load();
 
+            // Add services to the container.
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -55,11 +58,10 @@ namespace CoHabit.API
                     }
                 });
             });
-            
-            builder.Services.AddDbContext<CoHabitDbContext>(opt =>
-            {
-                opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-            });
+
+            builder.Services.AddDbContext<CoHabitDbContext>(options =>
+                options.UseNpgsql(Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")));
+
             builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
                 {
                     options.Password.RequiredLength = 6;
@@ -91,12 +93,12 @@ namespace CoHabit.API
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true,
-                        ValidIssuer = builder.Configuration["JwtOptions:Issuer"],
+                        ValidIssuer = Environment.GetEnvironmentVariable("JwtOptions__Issuer"),
                         ValidateAudience = true,
-                        ValidAudience = builder.Configuration["JwtOptions:Audience"],
+                        ValidAudience = Environment.GetEnvironmentVariable("JwtOptions__Audience"),
                         ValidateLifetime = true,
                         IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(builder.Configuration["JwtOptions:Secret"]!)),
+                            Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JwtOptions__Secret")!)),
                         ValidateIssuerSigningKey = true
                     };
                     options.Events = new JwtBearerEvents
@@ -105,6 +107,15 @@ namespace CoHabit.API
                         {
                             // Lấy token từ cookie thay vì header
                             context.Token = context.Request.Cookies["AccessToken"];
+                            
+                            // Hỗ trợ SignalR authentication qua query string
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chathub"))
+                            {
+                                context.Token = accessToken;
+                            }
+                            
                             return Task.CompletedTask;
                         }
                     };
@@ -121,11 +132,14 @@ namespace CoHabit.API
                             "https://cohabit-d134fu1op-huyld1504s-projects.vercel.app",
                             "https://cohabit-git-main-huyld1504s-projects.vercel.app",
                             "http://localhost:5173",
-                            "https://localhost:5173"
+                            "https://localhost:5173",
+                            "https://cohabit.vn",
+                            "http://cohabit.vn"
                         )
                             .AllowAnyHeader()
                             .AllowAnyMethod()
-                            .AllowCredentials(); // QUAN TRỌNG: Cho phép cookies
+                            .AllowCredentials() // QUAN TRỌNG: Cho phép cookies
+                            .SetIsOriginAllowedToAllowWildcardSubdomains(); // Hỗ trợ SignalR
                     });
             });
 
@@ -145,43 +159,102 @@ namespace CoHabit.API
             builder.Services.AddScoped<IPostService, PostService>();
             builder.Services.AddScoped<IOrderRepository, OrderRepository>();
             builder.Services.AddScoped<IOrderService, OrderService>();
+            builder.Services.AddScoped<ISubcriptionRepository, SubcriptionRepository>();
+            builder.Services.AddScoped<ISubcriptionService, SubcriptionService>();
+            builder.Services.AddScoped<IUserSubcriptionRepository, UserSubcriptionRepository>();
+            builder.Services.AddScoped<IUserSubcriptionService, UserSubcriptionService>();
+            builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+            builder.Services.AddScoped<IPayOSService, PayOSService>();
+            builder.Services.AddScoped<IPostFeedbackRepository, PostFeedbackRepository>();
+            builder.Services.AddScoped<IPostFeedbackService, PostFeedbackService>();
+            builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
+            builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+            builder.Services.AddScoped<IChatService, ChatService>();
 
-            // PayOS configuration and HttpClient
-            builder.Services.Configure<PayOSConfig>(builder.Configuration.GetSection("PayOS"));
+            // PayOS HttpClient
             builder.Services.AddHttpClient("payos", client =>
             {
-                client.BaseAddress = new Uri(builder.Configuration["PayOS:BaseUrl"] ?? "https://api-merchant.payos.vn/");
+                client.BaseAddress = new Uri(Environment.GetEnvironmentVariable("PayOS__BaseUrl") ?? "https://api-merchant.payos.vn/");
                 client.Timeout = TimeSpan.FromSeconds(30);
             });
 
-            // Brevo configuration and HttpClient
-            builder.Services.Configure<BrevoConfig>(builder.Configuration.GetSection("Brevo"));
+            // Brevo HttpClient
             builder.Services.AddHttpClient("brevo", client =>
             {
-                client.BaseAddress = new Uri(builder.Configuration["Brevo:BaseUrl"] ?? "https://api.brevo.com/v3/");
+                client.BaseAddress = new Uri(Environment.GetEnvironmentVariable("Brevo__BaseUrl") ?? "https://api.brevo.com/v3/");
                 client.Timeout = TimeSpan.FromSeconds(30);
             });
 
-            builder.Services.AddScoped<IPayOSService, PayOSService>();
+            // Cloudinary configuration
+            var cloudinaryAccount = new Account(
+                Environment.GetEnvironmentVariable("Cloudinary__CloudName"),
+                Environment.GetEnvironmentVariable("Cloudinary__ApiKey"),
+                Environment.GetEnvironmentVariable("Cloudinary__ApiSecret")
+            );
+
+            var cloudinary = new Cloudinary(cloudinaryAccount);
+            builder.Services.AddSingleton(cloudinary);
+
+            //SignalR with CORS support
+            builder.Services.AddSignalR(options =>
+            {
+                options.EnableDetailedErrors = true;
+                options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+                options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+            })
+            .AddJsonProtocol(options =>
+            {
+                options.PayloadSerializerOptions.PropertyNamingPolicy = null;
+            });
 
             var app = builder.Build();
+
+            try
+            {
+                using var scope = app.Services.CreateScope();
+                var services = scope.ServiceProvider;
+                var context = services.GetRequiredService<CoHabitDbContext>();
+                var logger = services.GetRequiredService<ILogger<Program>>();
+                
+                logger.LogInformation("Applying pending migrations...");
+                context.Database.Migrate();
+                logger.LogInformation("Migrations applied successfully!");
+            }
+            catch (Exception ex)
+            {
+                var logger = app.Services.GetRequiredService<ILogger<Program>>();
+                logger.LogError(ex, "An error occurred while migrating the database");
+                
+                // Trong production, bạn có thể muốn app dừng lại nếu migration fail
+                if (app.Environment.IsProduction())
+                {
+                    throw;
+                }
+            }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
+                app.UseHttpsRedirection();
             }
-            app.UseHttpsRedirection();
-
+            // CORS phải được đặt TRƯỚC Authentication/Authorization
             app.UseCors("AllowFrontend");
 
             app.UseAuthentication();
             app.UseAuthorization();
 
-
             app.MapControllers();
-
+            
+            // Map SignalR hub với CORS
+            app.MapHub<ChatHub>("/chathub", options =>
+            {
+                options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets | 
+                                        Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
+            })
+            .RequireCors("AllowFrontend"); // Áp dụng CORS policy cho hub
+            
             app.Run();
         }
     }
