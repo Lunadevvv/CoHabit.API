@@ -211,9 +211,9 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
             entity.Property(e => e.Title).HasMaxLength(100).IsRequired();
             entity.Property(e => e.Address).HasMaxLength(200).IsRequired();
             entity.Property(e => e.Price).IsRequired();
-            entity.Property(e => e.Description).HasMaxLength(1000);
-            entity.Property(e => e.Condition).HasMaxLength(1000);
-            entity.Property(e => e.DepositPolicy).HasMaxLength(1000);
+            entity.Property(e => e.Description).HasMaxLength(3000);
+            entity.Property(e => e.Condition).HasMaxLength(3000);
+            entity.Property(e => e.DepositPolicy).HasMaxLength(3000);
             entity.Property(e => e.CreatedAt).HasColumnType("TIMESTAMPTZ").IsRequired();
             entity.Property(e => e.UpdatedAt).HasColumnType("TIMESTAMPTZ").IsRequired();
             entity.Property(e => e.UserId).IsRequired();

@@ -11,7 +11,7 @@ services:
     environment:
       # Database
       - ConnectionStrings__DefaultConnection=${ConnectionStrings__DefaultConnection}
-      
+      - ConnectionStrings__HangfireConnection=${ConnectionStrings__HangfireConnection}
       # JWT
       - JwtOptions__Secret=${JwtOptions__Secret}
       - JwtOptions__Issuer=${JwtOptions__Issuer}
