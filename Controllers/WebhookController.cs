@@ -115,10 +115,25 @@ namespace CoHabit.API.Controllers
                     IsActive = true
                 };
 
-                await _userSubcriptionService.AddUserSubcription(userSubscription);
+                var createdSubscription = await _userSubcriptionService.AddUserSubcription(userSubscription);
+                
+                _logger.LogInformation("UserSubscription created with ID: {UserSubcriptionId}", createdSubscription.UserSubcriptionId);
+                
                 // Update user's role
                 await _authService.AssignRoleAsync(payment.UserId, subcription.Name);
                 _logger.LogInformation("Payment {PaymentId} marked as Success and subscription created", payment.PaymentId);
+
+                // Lên lịch job chạy đúng thời điểm EndDate
+                if (createdSubscription.UserSubcriptionId > 0)
+                {
+                    await _userSubcriptionService.ScheduleExpirationJobAsync(
+                        createdSubscription.UserSubcriptionId,
+                        createdSubscription.EndDate);
+                }
+                else
+                {
+                    _logger.LogError("Failed to create job: UserSubcriptionId is 0 or invalid");
+                }
             }
             else
             {

@@ -24,10 +24,20 @@ namespace CoHabit.API.Repositories.Implements
                         .FirstOrDefaultAsync() ?? throw new Exception("No active subcription found for this user");
         }
 
-        public async Task<int> AddUserSubcription(UserSubcription userSubcription)
+        public async Task<UserSubcription?> GetUserSubcriptionById(int userSubscriptionId)
+        {
+            return await _context.UserSubcriptions
+                        .Include(us => us.Subcription)
+                        .FirstOrDefaultAsync(us => us.UserSubcriptionId == userSubscriptionId);
+        }
+
+        public async Task<UserSubcription> AddUserSubcription(UserSubcription userSubcription)
         {
             _context.UserSubcriptions.Add(userSubcription);
-            return await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
+            
+            // Ensure ID is populated by EF Core after SaveChanges
+            return userSubcription;
         }
 
         public async Task<int> UpdateUserSubcriptionStatus(UserSubcription userSubcription, bool isActive)
@@ -43,6 +53,19 @@ namespace CoHabit.API.Repositories.Implements
                         .Where(us => us.UserId == userId && us.IsActive && us.SubcriptionId == subId)
                         .Include(us => us.Subcription)
                         .FirstOrDefaultAsync();
+        }
+
+        public async Task<int> SaveChangesAsync()
+        {
+            return await _context.SaveChangesAsync();
+        }
+
+        public async Task<UserSubcription?> GetOtherActiveUserSubscriptionAsync(Guid userId, int userSubscriptionId)
+        {
+            return await _context.UserSubcriptions
+                        .Include(us => us.Subcription)
+                        .OrderByDescending(us => us.EndDate)
+                        .FirstOrDefaultAsync(us => us.UserId == userId && us.IsActive && us.UserSubcriptionId != userSubscriptionId);
         }
     }
 }

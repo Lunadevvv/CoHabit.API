@@ -9,8 +9,11 @@ namespace CoHabit.API.Repositories.Interfaces
     public interface IUserSubcriptionRepository
     {
         public Task<UserSubcription> GetActiveSubcriptionByUserId(Guid userId);
+        public Task<UserSubcription?> GetUserSubcriptionById(int userSubscriptionId);
+        public Task<UserSubcription?> GetOtherActiveUserSubscriptionAsync(Guid userId, int userSubscriptionId);
         public Task<UserSubcription?> GetActiveSubcriptionByUserIdAndSubId(Guid userId, int subId);
-        public Task<int> AddUserSubcription(UserSubcription userSubcription);
+        public Task<UserSubcription> AddUserSubcription(UserSubcription userSubcription);
         public Task<int> UpdateUserSubcriptionStatus(UserSubcription userSubcription, bool isActive);
+        public Task<int> SaveChangesAsync();
     }
 }

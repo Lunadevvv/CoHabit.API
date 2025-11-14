@@ -310,7 +310,8 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
 
         builder.Entity<UserSubcription>(entity =>
         {
-            entity.HasKey(e => new { e.UserId, e.SubcriptionId });
+            entity.HasKey(e => e.UserSubcriptionId);
+            entity.Property(e => e.UserSubcriptionId).ValueGeneratedOnAdd();
             entity.Property(e => e.StartDate).HasColumnType("TIMESTAMPTZ").IsRequired();
             entity.Property(e => e.EndDate).HasColumnType("TIMESTAMPTZ").IsRequired();
             entity.Property(e => e.IsActive).IsRequired();

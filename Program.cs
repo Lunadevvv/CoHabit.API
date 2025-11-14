@@ -12,6 +12,8 @@ using Microsoft.IdentityModel.Tokens;
 using CoHabit.API.Helpers;
 using CloudinaryDotNet;
 using CoHabit.API.Hubs;
+using Hangfire;
+using Hangfire.PostgreSql;
 
 namespace CoHabit.API
 {
@@ -207,6 +209,21 @@ namespace CoHabit.API
                 options.PayloadSerializerOptions.PropertyNamingPolicy = null;
             });
 
+            // Cấu hình Hangfire với PostgreSQL
+            builder.Services.AddHangfire(configuration => configuration
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UsePostgreSqlStorage(options =>
+                {
+                    options.UseNpgsqlConnection(Environment.GetEnvironmentVariable("ConnectionStrings__HangfireConnection"));
+                }));
+
+            builder.Services.AddHangfireServer(options =>
+            {
+                options.WorkerCount = 5; // Số worker xử lý jobs
+            });
+
             var app = builder.Build();
 
             try
@@ -241,6 +258,12 @@ namespace CoHabit.API
             }
             // CORS phải được đặt TRƯỚC Authentication/Authorization
             app.UseCors("AllowFrontend");
+
+            // Cấu hình Hangfire Dashboard
+            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            {
+                Authorization = new[] { new HangfireAuthorizationFilter() }
+            });
 
             app.UseAuthentication();
             app.UseAuthorization();

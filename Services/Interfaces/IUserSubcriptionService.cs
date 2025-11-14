@@ -10,7 +10,9 @@ namespace CoHabit.API.Services.Interfaces
     {
         public Task<UserSubcription> GetActiveSubcriptionByUserId(Guid userId);
         public Task<UserSubcription?> GetActiveSubcriptionByUserIdAndSubId(Guid userId, int subId);
-        public Task<int> AddUserSubcription(UserSubcription userSubcription);
+        public Task<UserSubcription> AddUserSubcription(UserSubcription userSubcription);
         public Task<int> UpdateUserSubcriptionStatus(UserSubcription userSubcription, bool isActive);
+        Task<int> ProcessExpiredSubscriptionAsync(int userSubscriptionId);
+        Task ScheduleExpirationJobAsync(int userSubscriptionId, DateTime endDate);
     }
 }
