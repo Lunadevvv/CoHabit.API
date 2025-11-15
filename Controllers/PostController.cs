@@ -110,7 +110,6 @@ namespace CoHabit.API.Controllers
         }
         //API lấy detail bài viết theo postId
         [HttpGet("{postId}")]
-        [Authorize]
         public async Task<ActionResult<PostResponse>> GetPostById(Guid postId)
         {
             try
