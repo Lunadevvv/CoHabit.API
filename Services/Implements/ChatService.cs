@@ -16,12 +16,15 @@ namespace CoHabit.API.Services.Implements
         private readonly IMessageRepository _messageRepository;
         private readonly IConversationRepository _conversationRepository;
         private readonly IPostRepository _postRepository;
+        private readonly IOrderRepository _orderRepository;
         private readonly UserManager<User> _userManager;
         public ChatService(IMessageRepository messageRepository,
         IConversationRepository conversationRepository,
         IPostRepository postRepository,
+        IOrderRepository orderRepository,
         UserManager<User> userManager)
         {
+            _orderRepository = orderRepository;
             _messageRepository = messageRepository;
             _conversationRepository = conversationRepository;
             _postRepository = postRepository;
@@ -55,13 +58,28 @@ namespace CoHabit.API.Services.Implements
                 //create new conversation
                 var newConversation = new Conversation()
                 {
+                    Id = Guid.NewGuid(),
                     PostId = PostId,
                     OwnerId = post.UserId,
                     InterestedUserId = userId,
                     CreatedAt = DateTime.UtcNow,
                     IsActive = true
                 };
+
+                //Create Order
+                var newOrder = new Order()
+                {
+                    OrderId = Guid.NewGuid(),
+                    CreatedAt = DateTime.UtcNow,
+                    OwnerId = post.UserId,
+                    UserId = userId,
+                    PostId = PostId,
+                    ConversationId = newConversation.Id
+                };
+                newConversation.OrderId = newOrder.OrderId;
                 _conversationRepository.CreateAsync(newConversation);
+                _orderRepository.CreateOrderAsync(newOrder);
+
                 await _conversationRepository.SaveChangesAsync();
 
                 return MapToConversationResponse(newConversation, 0);

@@ -12,6 +12,7 @@ namespace CoHabit.API.Enitites
         public Guid PostId { get; set; }
         public Guid OwnerId { get; set; }
         public Guid InterestedUserId { get; set; }
+        public Guid OrderId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastMessageAt { get; set; }
         public bool IsActive { get; set; } = true;
@@ -23,5 +24,7 @@ namespace CoHabit.API.Enitites
         public virtual User? InterestedUser { get; set; }
         [JsonIgnore]
         public virtual ICollection<Message>? Messages { get; set; }
+        [JsonIgnore]
+        public virtual Order? Order { get; set; }
     }
 }

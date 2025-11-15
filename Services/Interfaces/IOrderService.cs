@@ -10,7 +10,7 @@ namespace CoHabit.API.Services.Interfaces
     public interface IOrderService
     {
         Task<List<OrderResponse>> GetOrdersByUserIdAsync(Guid userId);
-        Task<List<OrderResponse>> GetOrdersByOwnerIdAsync(Guid ownerId);
+        Task<PaginationResponse<IEnumerable<OrderResponse>>> GetOrdersByOwnerIdAsync(Guid ownerId, int currentPage, int pageSize);
         Task<int> CreateOrderAsync(Guid userId, Guid postId);
     }
 }

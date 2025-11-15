@@ -296,6 +296,11 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
                 .WithMany(p => p.Orders)
                 .HasForeignKey(e => e.PostId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(e => e.Conversation)
+                .WithOne(c => c.Order)
+                .HasForeignKey<Order>(e => e.ConversationId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         builder.Entity<Subcription>(entity =>

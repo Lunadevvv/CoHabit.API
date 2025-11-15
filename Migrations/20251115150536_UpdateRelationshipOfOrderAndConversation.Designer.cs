@@ -3,6 +3,7 @@ using System;
 using CoHabit.API;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CoHabit.API.Migrations
 {
     [DbContext(typeof(CoHabitDbContext))]
-    partial class CoHabitDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251115150536_UpdateRelationshipOfOrderAndConversation")]
+    partial class UpdateRelationshipOfOrderAndConversation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,7 +44,7 @@ namespace CoHabit.API.Migrations
 
                     b.HasKey("CharId");
 
-                    b.ToTable("Characteristics", (string)null);
+                    b.ToTable("Characteristics");
                 });
 
             modelBuilder.Entity("CoHabit.API.Enitites.Conversation", b =>
@@ -79,7 +82,7 @@ namespace CoHabit.API.Migrations
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("Conversations", (string)null);
+                    b.ToTable("Conversations");
                 });
 
             modelBuilder.Entity("CoHabit.API.Enitites.Furniture", b =>
@@ -104,7 +107,7 @@ namespace CoHabit.API.Migrations
 
                     b.HasKey("FurId");
 
-                    b.ToTable("Furnitures", (string)null);
+                    b.ToTable("Furnitures");
                 });
 
             modelBuilder.Entity("CoHabit.API.Enitites.Message", b =>
@@ -136,7 +139,7 @@ namespace CoHabit.API.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("Messages", (string)null);
+                    b.ToTable("Messages");
                 });
 
             modelBuilder.Entity("CoHabit.API.Enitites.Order", b =>
@@ -169,7 +172,7 @@ namespace CoHabit.API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("CoHabit.API.Enitites.Otp", b =>
@@ -209,7 +212,7 @@ namespace CoHabit.API.Migrations
                     b.HasIndex(new[] { "Phone" }, "IX_Otps_Phone")
                         .IsUnique();
 
-                    b.ToTable("Otps", (string)null);
+                    b.ToTable("Otps");
                 });
 
             modelBuilder.Entity("CoHabit.API.Enitites.Payment", b =>
@@ -252,7 +255,7 @@ namespace CoHabit.API.Migrations
 
                     b.HasIndex(new[] { "PaymentLinkId" }, "IX_Payments_PaymentLinkId");
 
-                    b.ToTable("Payments", (string)null);
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("CoHabit.API.Enitites.Post", b =>
@@ -305,7 +308,7 @@ namespace CoHabit.API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Posts", (string)null);
+                    b.ToTable("Posts");
                 });
 
             modelBuilder.Entity("CoHabit.API.Enitites.PostFeedback", b =>
@@ -340,7 +343,7 @@ namespace CoHabit.API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PostFeedbacks", (string)null);
+                    b.ToTable("PostFeedbacks");
                 });
 
             modelBuilder.Entity("CoHabit.API.Enitites.PostImage", b =>
@@ -363,7 +366,7 @@ namespace CoHabit.API.Migrations
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("PostImages", (string)null);
+                    b.ToTable("PostImages");
                 });
 
             modelBuilder.Entity("CoHabit.API.Enitites.Subcription", b =>
@@ -392,7 +395,7 @@ namespace CoHabit.API.Migrations
 
                     b.HasKey("SubcriptionId");
 
-                    b.ToTable("Subcriptions", (string)null);
+                    b.ToTable("Subcriptions");
                 });
 
             modelBuilder.Entity("CoHabit.API.Enitites.User", b =>
@@ -530,7 +533,7 @@ namespace CoHabit.API.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("UserFeedbacks", (string)null);
+                    b.ToTable("UserFeedbacks");
                 });
 
             modelBuilder.Entity("CoHabit.API.Enitites.UserSubcription", b =>
@@ -562,7 +565,7 @@ namespace CoHabit.API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserSubcriptions", (string)null);
+                    b.ToTable("UserSubcriptions");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>

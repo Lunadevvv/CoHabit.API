@@ -35,14 +35,14 @@ namespace CoHabit.API.Controllers
         }
 
         [HttpGet("owner")]
-        [Authorize]
-        public async Task<ActionResult<List<OrderResponse>>> GetOrdersByOwnerId()
+        [Authorize(Roles = "Admin,Moderator,ProMember")]
+        public async Task<ActionResult<PaginationResponse<IEnumerable<OrderResponse>>>> GetOrdersByOwnerId(int currentPage = 1, int pageSize = 10)
         {
             var ownerId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
                     ? parsedUserId
                     : throw new Exception("Invalid user ID");
-            var result = await _orderService.GetOrdersByOwnerIdAsync(ownerId);
-            return Ok(ApiResponse<List<OrderResponse>>.SuccessResponse(result, "Orders retrieved successfully."));
+            var result = await _orderService.GetOrdersByOwnerIdAsync(ownerId, currentPage, pageSize);
+            return Ok(ApiResponse<PaginationResponse<IEnumerable<OrderResponse>>>.SuccessResponse(result, "Orders retrieved successfully."));
         }
 
         // [HttpGet("{postId}")]

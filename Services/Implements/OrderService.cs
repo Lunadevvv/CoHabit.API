@@ -24,47 +24,39 @@ namespace CoHabit.API.Services.Implements
         public async Task<List<OrderResponse>> GetOrdersByUserIdAsync(Guid userId)
         {
             var orders = await _orderRepository.GetOrdersByUserIdAsync(userId);
-            return orders.Select(o => new OrderResponse
-            {
-                OrderId = o.OrderId,
-                CreatedAt = o.CreatedAt,
-                OwnerId = o.OwnerId,
-                UserId = o.UserId,
-                PostId = o.PostId,
-                User = o.User
-            }).ToList();
+            return orders;
         }
 
-        public async Task<List<OrderResponse>> GetOrdersByOwnerIdAsync(Guid ownerId)
+        public async Task<PaginationResponse<IEnumerable<OrderResponse>>> GetOrdersByOwnerIdAsync(Guid ownerId, int currentPage, int pageSize)
         {
-            var orders = await _orderRepository.GetOrdersByOwnerIdAsync(ownerId);
-            return orders.Select(o => new OrderResponse
-            {
-                OrderId = o.OrderId,
-                CreatedAt = o.CreatedAt,
-                OwnerId = o.OwnerId,
-                UserId = o.UserId,
-                PostId = o.PostId,
-                User = o.User
-            }).ToList();
+            var orders = await _orderRepository.GetOrdersByOwnerIdAsync(ownerId, currentPage, pageSize);
+            return orders;
         }
 
         public async Task<int> CreateOrderAsync(Guid userId, Guid postId)
         {
-            var post = await _postRepository.GetPostByIdAsync(postId);
-            if (post == null)
+            try
             {
-                throw new Exception("Post not found");
+                var post = await _postRepository.GetPostByIdAsync(postId);
+                if (post == null)
+                {
+                    throw new Exception("Post not found");
+                }
+                var order = new Order
+                {
+                    OrderId = Guid.NewGuid(),
+                    CreatedAt = DateTime.UtcNow,
+                    OwnerId = post.UserId,
+                    UserId = userId,
+                    PostId = postId
+                };
+                _orderRepository.CreateOrderAsync(order);
+                return await _orderRepository.SaveChangesAsync();
             }
-            var order = new Order
+            catch (Exception)
             {
-                OrderId = Guid.NewGuid(),
-                CreatedAt = DateTime.UtcNow,
-                OwnerId = post.UserId,
-                UserId = userId,
-                PostId = postId
-            };
-            return await _orderRepository.CreateOrderAsync(order);
+                return 0;
+            }
         }
     }
 }
