@@ -13,5 +13,6 @@ namespace CoHabit.API.Services.Interfaces
         (string refreshToken, DateTime expiresAtUtc) GenerateRefreshToken();
         (string jwtToken, DateTime expiresAtUtc) GenerateJwtToken(User user, IList<string> roles);
         void WriteAuthTokenAsHttpOnlyCookie(string cookieName, string token, DateTime expiration);
+        void DeleteAuthCookie(string cookieName);
     }
 }

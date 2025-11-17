@@ -60,16 +60,43 @@ namespace CoHabit.API.Services.Implements
         public void WriteAuthTokenAsHttpOnlyCookie(string cookieName, string token,
             DateTime expiration)
         {
-            //thêm mới cookie hoac cập nhật cookie nếu đã tồn tại
-            _httpContextAccessor.HttpContext?.Response.Cookies.Append(cookieName,
-                token, new CookieOptions
-                {
-                    HttpOnly = true, // ngăn javascript truy cập cookie này
-                    Expires = expiration,
-                    IsEssential = true,
-                    Secure = true,
-                    SameSite = SameSiteMode.Strict
-                });
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null) return;
+
+            // Secure = true chỉ khi production (HTTPS), false khi development (HTTP)
+            var isProduction = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production";
+
+            //thêm mới cookie hoặc cập nhật cookie nếu đã tồn tại
+            httpContext.Response.Cookies.Append(cookieName, token, new CookieOptions
+            {
+                HttpOnly = true, // ngăn javascript truy cập cookie này
+                Expires = expiration,
+                IsEssential = true,
+                Secure = isProduction, // true cho production, false cho development
+                SameSite = SameSiteMode.Strict,
+                Path = "/" // Đảm bảo cookie available cho toàn bộ application
+            });
+        }
+
+        // Xóa cookie authentication
+        public void DeleteAuthCookie(string cookieName)
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null) return;
+
+            var isProduction = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production";
+
+            // Xóa cookie với cùng options như lúc tạo
+            httpContext.Response.Cookies.Delete(cookieName, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = isProduction,
+                SameSite = isProduction ? SameSiteMode.Lax : SameSiteMode.None,
+                Path = "/",
+                Expires = DateTime.UtcNow.AddDays(-1), // Đặt ngày hết hạn trong quá khứ để xóa cookie
+                IsEssential = true,
+                Domain = isProduction ? ".cohabit.vn" : null // Chỉ định domain nếu cần thiết
+            });
         }
 
         public (string refreshToken, DateTime expiresAtUtc) GenerateRefreshToken()

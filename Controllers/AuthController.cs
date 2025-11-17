@@ -64,12 +64,31 @@ namespace CoHabit.API.Controllers
 
         [HttpPost("logout")]
         [Authorize]
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
-            Response.Cookies.Delete("AccessToken"); // Xóa cookie đăng nhập
-            Response.Cookies.Delete("RefreshToken"); // Xóa cookie đăng nhập
+            try
+            {
+                // Lấy userId từ JWT claims
+                var userId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
+                    ? parsedUserId
+                    : throw new UnauthorizedAccessException("Invalid user ID");
 
-            return Ok("Log out successful");
+                _logger.LogInformation("User {userId} logout attempt", userId);
+
+                // Gọi service để logout (đã bao gồm xóa cookies)
+                await _authService.LogoutAsync(userId);
+
+                return Ok(ApiResponse<object>.SuccessResponse(new { }, "Logout successful."));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ApiResponse<object>.ErrorResponse(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during logout");
+                return BadRequest(ApiResponse<object>.ErrorResponse("Logout failed."));
+            }
         }
 
         [HttpPost("refresh-token")]

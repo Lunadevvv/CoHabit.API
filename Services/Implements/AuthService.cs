@@ -8,6 +8,7 @@ using CoHabit.API.Enitites;
 using CoHabit.API.Repositories.Interfaces;
 using CoHabit.API.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 
 namespace CoHabit.API.Services.Implements
 {
@@ -17,12 +18,14 @@ namespace CoHabit.API.Services.Implements
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole<Guid>> _roleManager;
         private readonly IAuthRepository _authRepository;
-        public AuthService(IJwtService jwtService, UserManager<User> userManager, IAuthRepository authRepository, RoleManager<IdentityRole<Guid>> roleManager)
+        private readonly ILogger<AuthService> _logger;
+        public AuthService(IJwtService jwtService, UserManager<User> userManager, IAuthRepository authRepository, RoleManager<IdentityRole<Guid>> roleManager, ILogger<AuthService> logger)
         {
             _roleManager = roleManager;
             _authRepository = authRepository;
             _userManager = userManager;
             _jwtService = jwtService;
+            _logger = logger;
         }
 
         public async Task AssignRoleAsync(Guid userId, string role)
@@ -96,10 +99,12 @@ namespace CoHabit.API.Services.Implements
             var user = await _authRepository.GetUserByPhoneAsync(loginRequest.Phone);
             if (user == null || !await _userManager.CheckPasswordAsync(user, loginRequest.Password))
             {
+                _logger.LogWarning("Failed login attempt for phone: {Phone}", loginRequest.Phone);
                 throw new UnauthorizedAccessException("Invalid phone number or password.");
             }
             if (user.IsRevoked)
             {
+                _logger.LogWarning("Login attempt for banned user: {UserId}", user.Id);
                 throw new UnauthorizedAccessException("You have been banned!");
             }
             var roles = await _userManager.GetRolesAsync(user);
@@ -108,7 +113,7 @@ namespace CoHabit.API.Services.Implements
             var (jwtToken, jwtExpiresAtUtc) = _jwtService.GenerateJwtToken(user, roles);
             var (refreshToken, refreshTokenExpiresAtUtc) = _jwtService.GenerateRefreshToken();
 
-            //Save accesstoken to cookie
+            //Save tokens to cookie
             _jwtService.WriteAuthTokenAsHttpOnlyCookie("AccessToken", jwtToken, jwtExpiresAtUtc);
             _jwtService.WriteAuthTokenAsHttpOnlyCookie("RefreshToken", refreshToken, refreshTokenExpiresAtUtc);
 
@@ -116,6 +121,9 @@ namespace CoHabit.API.Services.Implements
             user.RefreshToken = refreshToken;
             user.RefreshTokenExpiryTime = refreshTokenExpiresAtUtc;
             await _userManager.UpdateAsync(user);
+
+            _logger.LogInformation("User {UserId} logged in successfully", user.Id);
+            
             return new LoginResponse
             {
                 AccessToken = jwtToken,
@@ -131,6 +139,7 @@ namespace CoHabit.API.Services.Implements
             //Check if user is revoked
             if (user.IsRevoked)
             {
+                _logger.LogWarning("Refresh token attempt for banned user: {UserId}", user.Id);
                 throw new UnauthorizedAccessException("You have been banned!");
             }
 
@@ -139,7 +148,7 @@ namespace CoHabit.API.Services.Implements
             var (jwtToken, jwtExpiresAtUtc) = _jwtService.GenerateJwtToken(user, roles);
             var (refreshToken, refreshTokenExpiresAtUtc) = _jwtService.GenerateRefreshToken();
 
-            //Save accesstoken and refreshtoken to cookie
+            //Save tokens to cookie
             _jwtService.WriteAuthTokenAsHttpOnlyCookie("AccessToken", jwtToken, jwtExpiresAtUtc);
             _jwtService.WriteAuthTokenAsHttpOnlyCookie("RefreshToken", refreshToken, refreshTokenExpiresAtUtc);
 
@@ -147,6 +156,8 @@ namespace CoHabit.API.Services.Implements
             user.RefreshToken = refreshToken;
             user.RefreshTokenExpiryTime = refreshTokenExpiresAtUtc;
             await _userManager.UpdateAsync(user);
+
+            _logger.LogInformation("Token refreshed successfully for user: {UserId}", user.Id);
 
             return new LoginResponse
             {
@@ -183,6 +194,38 @@ namespace CoHabit.API.Services.Implements
             user.RefreshTokenExpiryTime = null;
             user.IsRevoked = true;
             await _userManager.UpdateAsync(user);
+        }
+
+        public async Task LogoutAsync(Guid userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+            {
+                _logger.LogWarning("Logout attempt for non-existent user: {UserId}", userId);
+                throw new UnauthorizedAccessException("User not found.");
+            }
+
+            // 1. Xóa refresh token khỏi database
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = null;
+            
+            // 2. Tăng SecurityStamp để invalidate tất cả token cũ
+            await _userManager.UpdateSecurityStampAsync(user);
+            
+            // 3. Cập nhật user
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                _logger.LogError("Failed to logout user {UserId}: {Errors}", userId, errors);
+                throw new Exception("Failed to logout user.");
+            }
+
+            // 4. Xóa cookies
+            _jwtService.DeleteAuthCookie("AccessToken");
+            _jwtService.DeleteAuthCookie("RefreshToken");
+
+            _logger.LogInformation("User {UserId} logged out successfully", userId);
         }
     }
 }
