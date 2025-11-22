@@ -39,5 +39,7 @@ namespace CoHabit.API.Enitites
         public virtual ICollection<Conversation>? InterestedConversations { get; set; }
         [JsonIgnore]
         public virtual ICollection<Message>? SentMessages { get; set; }
+        [JsonIgnore]
+        public virtual AppFeedback? AppFeedback { get; set; }
     }
 }

@@ -173,6 +173,8 @@ namespace CoHabit.API
             builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
             builder.Services.AddScoped<IMessageRepository, MessageRepository>();
             builder.Services.AddScoped<IChatService, ChatService>();
+            builder.Services.AddScoped<IAppFeedbackRepository, AppFeedbackRepository>();
+            builder.Services.AddScoped<IAppFeedbackService, AppFeedbackService>();
 
             // PayOS HttpClient
             builder.Services.AddHttpClient("payos", client =>

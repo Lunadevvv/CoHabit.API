@@ -24,6 +24,7 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
     public DbSet<UserSubcription> UserSubcriptions { get; set; }
     public DbSet<Conversation> Conversations { get; set; }
     public DbSet<Message> Messages { get; set; }
+    public DbSet<AppFeedback> AppFeedbacks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
 
@@ -374,6 +375,22 @@ public class CoHabitDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid
             entity.HasOne(e => e.Sender)
                 .WithMany(u => u.SentMessages)
                 .HasForeignKey(e => e.SenderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<AppFeedback>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.FeedbackText).HasMaxLength(3000).IsRequired();
+            entity.Property(e => e.Rating).IsRequired();
+            entity.Property(e => e.ExperienceScore).IsRequired();
+            entity.Property(e => e.MostFavoriteFeature).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasColumnType("TIMESTAMPTZ").IsRequired();
+
+            entity.HasOne(e => e.User)
+                .WithOne(u => u.AppFeedback)
+                .HasForeignKey<AppFeedback>(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
