@@ -227,5 +227,32 @@ namespace CoHabit.API.Services.Implements
 
             _logger.LogInformation("User {UserId} logged out successfully", userId);
         }
+
+        ////////////////////////////////////////////////////ADMIN FEATURES////////////////////////////////////////////////////
+        //Get list users with pagination
+        public async Task<PaginationResponse<List<GetUsersByPagingResponse>>> GetUsersByPagingAsync(PaginationRequest paginationRequest)
+        {
+            var query = await _authRepository.GetUsersByPagingAsync(paginationRequest);
+
+            var responseItems = query.Items.Select(user => new GetUsersByPagingResponse
+            {
+                Id = user.Id,
+                FullName = user.FirstName + " " + user.LastName,
+                Phone = user.PhoneNumber,
+                avatarUrl = user.Image,
+                Role = _userManager.GetRolesAsync(user).Result.FirstOrDefault(),
+                Sex = user.Sex.ToString(),
+                CreatedAt = user.CreatedAt
+            }).ToList();
+
+            return new PaginationResponse<List<GetUsersByPagingResponse>>
+            {
+                CurrentPage = query.CurrentPage,
+                PageSize = query.PageSize,
+                TotalCount = query.TotalCount,
+                TotalPages = query.TotalPages,
+                Items = responseItems
+            };
+        }
     }
 }

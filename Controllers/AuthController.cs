@@ -214,5 +214,27 @@ namespace CoHabit.API.Controllers
                 return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message));
             }
         }
+
+        /////////////////////////////////////////////////// ADMIN ONLY ///////////////////////////////////////////////////
+        //Get users with paging
+        [HttpGet("users/paging")]
+        [Authorize(Roles = "Admin, Moderator")]
+        public async Task<IActionResult> GetUsersByPaging([FromQuery] PaginationRequest paginationRequest)
+        {
+            try
+            {
+                _logger.LogInformation("Getting users by paging: Page {currentPage}, Size {pageSize}", paginationRequest.CurrentPage, paginationRequest.PageSize);
+                var response = await _authService.GetUsersByPagingAsync(paginationRequest);
+                return Ok(ApiResponse<PaginationResponse<List<GetUsersByPagingResponse>>>.SuccessResponse(response, "Users retrieved successfully."));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ApiResponse<object>.ErrorResponse(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message));
+            }
+        }
     }
 }

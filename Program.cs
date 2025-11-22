@@ -14,6 +14,7 @@ using CloudinaryDotNet;
 using CoHabit.API.Hubs;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace CoHabit.API
 {
@@ -196,6 +197,19 @@ namespace CoHabit.API
 
             var cloudinary = new Cloudinary(cloudinaryAccount);
             builder.Services.AddSingleton(cloudinary);
+
+            // CẤU HÌNH GIỚI HẠN DUNG LƯỢNG REQUEST
+            builder.Services.Configure<FormOptions>(options =>
+            {
+                options.MultipartBodyLengthLimit = 52428800; // 50MB
+                options.ValueLengthLimit = 52428800;
+                options.MultipartHeadersLengthLimit = 52428800;
+            });
+
+            builder.WebHost.ConfigureKestrel(serverOptions =>
+            {
+                serverOptions.Limits.MaxRequestBodySize = 52428800; // 50MB
+            });
 
             //SignalR with CORS support
             builder.Services.AddSignalR(options =>

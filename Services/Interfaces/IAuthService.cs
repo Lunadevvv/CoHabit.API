@@ -17,5 +17,6 @@ namespace CoHabit.API.Services.Interfaces
         Task RevokeTokenAsync(Guid userId);
         Task AssignRoleAsync(Guid userId, string role);
         Task LogoutAsync(Guid userId);
+        Task<PaginationResponse<List<GetUsersByPagingResponse>>> GetUsersByPagingAsync(PaginationRequest paginationRequest);
     }
 }

@@ -73,7 +73,7 @@ namespace CoHabit.API.Services.Implements
                 Expires = expiration,
                 IsEssential = true,
                 Secure = isProduction, // true cho production, false cho development
-                SameSite = SameSiteMode.Strict,
+                SameSite = isProduction ? SameSiteMode.Lax : SameSiteMode.None,
                 Path = "/" // Đảm bảo cookie available cho toàn bộ application
             });
         }
@@ -86,17 +86,32 @@ namespace CoHabit.API.Services.Implements
 
             var isProduction = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production";
 
+            // ⭐ DEBUG: Log cookie trước khi xóa
+            Console.WriteLine($"[DEBUG] Attempting to delete cookie: {cookieName}");
+            Console.WriteLine($"[DEBUG] Current cookies: {string.Join(", ", httpContext.Request.Cookies.Keys)}");
+            Console.WriteLine($"[DEBUG] Environment: {(isProduction ? "Production" : "Development")}");
+
             // Xóa cookie với cùng options như lúc tạo
-            httpContext.Response.Cookies.Delete(cookieName, new CookieOptions
+            var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
                 Secure = isProduction,
                 SameSite = isProduction ? SameSiteMode.Lax : SameSiteMode.None,
                 Path = "/",
-                Expires = DateTime.UtcNow.AddDays(-1), // Đặt ngày hết hạn trong quá khứ để xóa cookie
-                IsEssential = true,
-                Domain = isProduction ? ".cohabit.vn" : null // Chỉ định domain nếu cần thiết
-            });
+                Expires = DateTime.UtcNow.AddDays(-1),
+                IsEssential = true
+            };
+
+            // ⭐ Set Domain cho production
+            if (isProduction)
+            {
+                cookieOptions.Domain = ".cohabit.vn";
+            }
+
+            httpContext.Response.Cookies.Delete(cookieName, cookieOptions);
+
+            // ⭐ DEBUG: Verify deletion
+            Console.WriteLine($"[DEBUG] Cookie deletion executed for: {cookieName}");
         }
 
         public (string refreshToken, DateTime expiresAtUtc) GenerateRefreshToken()

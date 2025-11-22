@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CoHabit.API.DTOs.Requests;
+using CoHabit.API.DTOs.Responses;
 using CoHabit.API.Enitites;
 
 namespace CoHabit.API.Repositories.Interfaces
@@ -14,5 +15,6 @@ namespace CoHabit.API.Repositories.Interfaces
         Task<User?> ValidateRefreshTokenAsync(Guid userId, string refreshToken);
         Task<List<Characteristic>> GetUserCharacteristicsByUserIdAsync(Guid userId);
         Task UpdateUserCharacteristics(User user, List<Characteristic> characteristics);
+        Task<PaginationResponse<List<User>>> GetUsersByPagingAsync(PaginationRequest paginationRequest);
     }
 }
