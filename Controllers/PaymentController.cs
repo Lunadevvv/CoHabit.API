@@ -43,7 +43,7 @@ namespace CoHabit.API.Controllers
         }
 
         [HttpGet("all")]
-        [Authorize]
+        [Authorize(Roles = "Admin, Moderator")]
         public async Task<ActionResult<List<Payment>>> GetAllPayments()
         {
             var payments = await _paymentService.GetAllPayment();
