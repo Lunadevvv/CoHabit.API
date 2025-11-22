@@ -19,13 +19,17 @@ namespace CoHabit.API.Repositories.Implements
 
         public async Task<List<Payment>> GetAllPayment()
         {
-            return await _context.Payments.ToListAsync();
+            return await _context.Payments
+                    .Include(p => p.User)
+                    .OrderByDescending(p => p.CreatedDate)
+                    .ToListAsync();
         }
 
         public async Task<List<Payment>> GetAllUserPayment(string userId)
         {
             return await _context.Payments
                 .Where(p => p.UserId.Equals(userId))
+                .OrderByDescending(p => p.CreatedDate)
                 .ToListAsync();
         }
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using CoHabit.API.DTOs.Responses;
 using CoHabit.API.Enitites;
 using CoHabit.API.Enums;
 using CoHabit.API.Repositories.Interfaces;
@@ -21,9 +22,22 @@ namespace CoHabit.API.Services.Implements
             _userManager = userManager;
             _paymentRepository = paymentRepository;
         }
-        public async Task<List<Payment>> GetAllPayment()
+        public async Task<List<PaymentsResponse>> GetAllPayment()
         {
-            return await _paymentRepository.GetAllPayment();
+            var payments = await _paymentRepository.GetAllPayment();
+            var paymentResponses = payments.Select(p => new PaymentsResponse
+            {
+                FullName = p.User?.FirstName + " " + p.User?.LastName,
+                Phone = p.User?.PhoneNumber,
+                AvatarUrl = p.User?.Image,
+                Price = p.Price,
+                Description = p.Description,
+                Status = p.Status.ToString(),
+                CreatedDate = p.CreatedDate,
+                SubcriptionId = p.SubcriptionId
+            }).ToList();
+            
+            return paymentResponses;
         }
 
         public async Task<List<Payment>> GetAllUserPayment(string userId)
