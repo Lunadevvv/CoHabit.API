@@ -73,7 +73,7 @@ namespace CoHabit.API.Services.Implements
                 Expires = expiration,
                 IsEssential = true,
                 Secure = isProduction, // true cho production, false cho development
-                SameSite = isProduction ? SameSiteMode.Lax : SameSiteMode.None,
+                SameSite = SameSiteMode.None,
                 Path = "/" // Đảm bảo cookie available cho toàn bộ application
             });
         }
@@ -96,17 +96,11 @@ namespace CoHabit.API.Services.Implements
             {
                 HttpOnly = true,
                 Secure = isProduction,
-                SameSite = isProduction ? SameSiteMode.Lax : SameSiteMode.None,
+                SameSite = SameSiteMode.None,
                 Path = "/",
                 Expires = DateTime.UtcNow.AddDays(-1),
                 IsEssential = true
             };
-
-            // ⭐ Set Domain cho production
-            if (isProduction)
-            {
-                cookieOptions.Domain = ".cohabit.vn";
-            }
 
             httpContext.Response.Cookies.Delete(cookieName, cookieOptions);
 
